@@ -1,5 +1,7 @@
 module SNNLab
 
-# Write your package code here.
+function hellomypackage()
+    println("Hello")
+end
 
 end
