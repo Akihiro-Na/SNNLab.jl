@@ -6,7 +6,7 @@ using Parameters: @unpack # or using UnPack
 using ..Neuron
 
 # LIFニューロンのパラメータ(固定)
-@kwdef struct LIFParameter{FT} <: AbstractNeuronParam
+@kwdef struct LIFParameter{FT} <: Neuron.AbstractNeuronParam{FT}
     tref::FT = 2 # 不応期 [ms]
     tau_m::FT = 10 # 膜時定数 [ms]
     vrest::FT = -60 # 静止膜電位 [mV]
@@ -16,7 +16,7 @@ using ..Neuron
 end
 
 # LIFニューロンの定義
-@kwdef mutable struct LIF{FT} <: AbstractNeuron{FT}
+@kwdef mutable struct LIF{FT} <: Neuron.AbstractNeuron{FT}
     param::LIFParameter = LIFParameter{FT}()
     N::UInt32 #ニューロンの数
     v::Vector{FT} = fill(-65.0, N); v_::Vector{FT} = fill(-65.0, N) # 膜電位, 発火電位も記録する膜電位 (mV)
