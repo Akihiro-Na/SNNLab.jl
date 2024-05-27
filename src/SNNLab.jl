@@ -1,7 +1,6 @@
 module SNNLab
 
-function hellomypackage()
-    println("Hello")
-end
+include("./neurons/Neuron.jl")
+include("./neurons/LIFNeuron.jl")
 
-end
+end # module
