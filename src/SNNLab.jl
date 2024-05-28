@@ -1,6 +1,6 @@
 module SNNLab
 
-include("neurons/Neuron.jl")
+include("neurons/AbNeuron.jl")
 include("neurons/LIFNeuron.jl")
 
 using .Neuron
