@@ -1,4 +1,4 @@
-# src/neurons/neuron.jl
+# src/neurons/Neuron.jl
 module Neuron
 
 # 抽象型の定義
