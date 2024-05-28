@@ -43,4 +43,10 @@ function update!(variable::LIF, param::LIFParameter, dt, Ie::Vector)
     end
 end
 
+#= update関数の検証について
+    N=1 [個], dt=0.01f0 [ms], T=450 [ms]の環境下で
+    paramを引数として明示的に渡すと実行時間は約0.002
+    paramをLIFから参照すると実行時間は約0.02
+    paramをmutableではない構造体として渡す方が10倍ほど早い
+=#
 end # module LIFNeuron
