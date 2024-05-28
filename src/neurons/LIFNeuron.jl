@@ -20,14 +20,14 @@ end
     param::LIFParameter = LIFParameter{FT}()
     N::UInt32 #ニューロンの数
     v::Vector{FT} = fill(-65.0, N); v_::Vector{FT} = fill(-65.0, N) # 膜電位, 発火電位も記録する膜電位 (mV)
-    fire::Vector{Bool} = zeros(Bool, N) # 発火
+    spike::Vector{Bool} = zeros(Bool, N) # 発火
     tlast::Vector{FT} = zeros(N) # 最後の発火時刻 (ms)
     tcount::FT = 0 # 時間カウント
 end
 
 # LIFNeuronに対するupdate!メソッドの定義
-function update!(variable::LIF, param::LIFParameter, dt, Ie::Vector)
-    @unpack N, v, v_, fire, tlast, tcount = variable
+function update!(neurons::LIF, param::LIFParameter, dt, Ie::Vector)
+    @unpack N, v, v_, spike, tlast, tcount = neurons
     @unpack tref, tau_m, vrest, vreset, vthr, vpeak = param
     
     @inbounds for i = 1:N
@@ -36,10 +36,10 @@ function update!(variable::LIF, param::LIFParameter, dt, Ie::Vector)
         #v[i] += dt * ifelse(dt*tcount[1] > tlast[i] + tref, (vrest - v[i] + Ie[i]) / tau_m, 0)
     end
     @inbounds for i = 1:N
-        fire[i] = v[i] >= vthr
-        v_[i] = ifelse(fire[i], vpeak, v[i]) #発火時の電位も含めて記録するための変数 (除いてもよい)
-        v[i] = ifelse(fire[i], vreset, v[i])        
-        tlast[i] = ifelse(fire[i], dt*tcount, tlast[i]) # 発火時刻の更新
+        spike[i] = v[i] >= vthr
+        v_[i] = ifelse(spike[i], vpeak, v[i]) #発火時の電位も含めて記録するための変数 (除いてもよい)
+        v[i] = ifelse(spike[i], vreset, v[i])        
+        tlast[i] = ifelse(spike[i], dt*tcount, tlast[i]) # 発火時刻の更新
     end
 end
 
@@ -49,4 +49,13 @@ end
     paramをLIFから参照すると実行時間は約0.02
     paramをmutableではない構造体として渡す方が10倍ほど早い
 =#
+
+function get_spike(neurons::LIF)::Vector{Bool}
+    return neurons.spike
+end
+
+function get_v(neurons::LIF{FT})::Vector{FT} where FT
+    return neurons.v
+end
+
 end # module LIFNeuron
