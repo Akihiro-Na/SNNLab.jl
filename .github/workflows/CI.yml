@@ -38,4 +38,6 @@ jobs:
           arch: ${{ matrix.arch }}
       - uses: julia-actions/cache@v1
       - uses: julia-actions/julia-buildpkg@v1
+      - name: List files in the repository
+        run: ls -R # for check path
       - uses: julia-actions/julia-runtest@v1
