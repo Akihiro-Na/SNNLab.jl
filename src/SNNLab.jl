@@ -10,6 +10,7 @@ include("synapses/AbSynapse.jl")
 include("synapses/DoubleExpSynapse.jl")
 
 export LIF
+export update!
 export DExpSynapse
 
 end # module
