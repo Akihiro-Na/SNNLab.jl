@@ -4,6 +4,7 @@ authors = ["Akihiro Nakamura <nakamura27@bpe.es.osaka-u.ac.jp> and contributors"
 version = "1.0.0-DEV"
 
 [deps]
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 Parameters = "d96e819e-fc66-5662-9728-84c9c7592b0a"
 
 [compat]
