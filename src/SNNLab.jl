@@ -2,6 +2,7 @@ module SNNLab
 
 # using
 using LinearAlgebra
+using Plots
 
 include("neurons/AbNeuron.jl")
 include("neurons/LIFNeuron.jl")
