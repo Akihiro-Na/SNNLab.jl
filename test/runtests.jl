@@ -10,3 +10,7 @@ end
     # LIFNeuronモジュール内の関数や構造体のテスト
     include("../examples/LIFNeuron.jl")
 end
+
+@testset "DoubleExpSynapse Tests with LIF" begin
+    include("../examples/DoubleExpSynapse.jl")
+end
