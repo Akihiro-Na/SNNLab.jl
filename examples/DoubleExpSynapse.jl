@@ -3,6 +3,7 @@ LIFニューロンのtest
 入力電流に対する応答の確認
 =#
 using SNNLab
+using Plots
 
 T = 450 # ms
 dt = 0.01f0 # ms
