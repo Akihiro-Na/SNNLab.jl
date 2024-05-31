@@ -1,12 +1,10 @@
-module LIFNeuron
 
 using Base: @kwdef
 using Parameters: @unpack # or using UnPack
 
-using ..Neuron
 
 # LIFニューロンのパラメータ(固定)
-@kwdef struct LIFParameter{FT} <: Neuron.AbstractNeuronParam{FT}
+@kwdef struct LIFParameter{FT} <: AbstractNeuronParam{FT}
     tref::FT = 2 # 不応期 [ms]
     tau_m::FT = 10 # 膜時定数 [ms]
     vrest::FT = -60 # 静止膜電位 [mV]
@@ -16,7 +14,7 @@ using ..Neuron
 end
 
 # LIFニューロンの定義
-@kwdef mutable struct LIF{FT} <: Neuron.AbstractNeuron{FT}
+@kwdef mutable struct LIF{FT} <: AbstractNeuron{FT}
     param::LIFParameter = LIFParameter{FT}()
     N::UInt32 #ニューロンの数
     v::Vector{FT} = fill(-65.0, N); v_::Vector{FT} = fill(-65.0, N) # 膜電位, 発火電位も記録する膜電位 (mV)
@@ -41,6 +39,8 @@ function update!(neurons::LIF, param::LIFParameter, dt, Ie::Vector)
         v[i] = ifelse(spike[i], vreset, v[i])        
         tlast[i] = ifelse(spike[i], dt*tcount, tlast[i]) # 発火時刻の更新
     end
+    # time count +1
+    neurons.tcount += 1
 end
 
 #= update関数の検証について
@@ -50,6 +50,16 @@ end
     paramをmutableではない構造体として渡す方が10倍ほど早い
 =#
 
+# LIFNeuronに対するinit!メソッドの定義
+function init!(neurons::LIF)
+    @unpack N, v, v_, spike, tlast, tcount = neurons
+    v = zeros(N)
+    v_ = zeros(N)
+    tlast = zeros(N)
+    spike = zeros(N)
+    tcount = 0
+end
+
 function get_spike(neurons::LIF)::Vector{Bool}
     return neurons.spike
 end
@@ -57,5 +67,3 @@ end
 function get_v(neurons::LIF{FT})::Vector{FT} where FT
     return neurons.v
 end
-
-end # module LIFNeuron
