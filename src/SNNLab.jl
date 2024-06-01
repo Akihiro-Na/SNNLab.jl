@@ -23,6 +23,7 @@ include("synapses/DoubleExpSynapse.jl")
 
 export LIF, PPPNeuron
 export DExpSynapse
+export Maze
 export update!,init!
 
 end # module
