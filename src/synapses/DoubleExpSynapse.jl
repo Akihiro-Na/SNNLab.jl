@@ -27,6 +27,16 @@ function update!(synapses::DExpSynapse, param::DExpSynapseParameter, dt, spikes:
     end
 end
 
+function update!(synapses::DExpSynapse, param::DExpSynapseParameter, dt, spikes::BitVector)
+    @unpack N, Isyn, h = synapses
+    @unpack τ_syn_fast, τ_syn_slow = param
+    
+    @inbounds for i = 1:N
+        Isyn[i] += dt * (-Isyn[i]/τ_syn_slow + h[i])
+        h[i] += dt * (-h[i]/τ_syn_fast + spikes[i]/(τ_syn_fast*τ_syn_slow))
+    end
+end
+
 # DoubleExpSynapseに対するinit!メソッドの定義
 function init!(synapses::DExpSynapse)
     @unpack N, Isyn, h = synapses

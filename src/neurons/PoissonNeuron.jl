@@ -18,30 +18,31 @@ end
 # Poisson point process neuron modelの定義
 @kwdef mutable struct PPPNeuron{FT} <: AbstractNeuron{FT}
     N::UInt32 #ニューロンの数
+    nt::UInt32 #用意する時間ステップ数
     tcount::UInt = 1 # 時間カウント
-    random_numbers::Float32 = rand(nt, N)
-    spike::Vector{Bool} = zeros(Bool,N)
+    random_numbers::Matrix{FT} = rand(nt, N)
+    spike::BitVector = BitVector(zeros(Bool, N))
 end
 
 # Poisson point process neuron modelのupdate!メソッドの定義
 function update!(neurons::PPPNeuron, dt, λ::Vector)
     @unpack N, random_numbers, tcount, spike = neurons
-    spike = random_numbers(tcount,:) .< λ*dt*1e-3 # ms to s
+    neurons.spike .= random_numbers[tcount,:] .< λ*dt*1e-3 # ms to s
     
     # time count +1
     neurons.tcount += 1
-    return spike
+    return neurons.spike
 end
 
 # LIFNeuronに対するinit!メソッドの定義
-function init!(neurons::PPPNeuron)
-    @unpack N, random_numbers, tcount, spike = neurons
+function init!(neurons::PPPNeuron{FT}) where FT
+    @unpack N, nt, random_numbers, tcount, spike = neurons
     tcount::UInt = 1 # 時間カウント
-    random_numbers::Float32 = rand(nt, N)
-    spike::Vector{Bool} = zeros(Bool,N)
+    random_numbers::Matrix{FT} = rand(nt, N)
+    spike::BitVector = BitVector(zeros(Bool, N))
 end
 
-function get_spike(neurons::PPPNeuron)::Vector{Bool}
+function get_spike(neurons::PPPNeuron)::BitVector
     return neurons.spike
 end
 

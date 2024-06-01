@@ -11,6 +11,11 @@ end
     include("../examples/LIFNeuron.jl")
 end
 
+@testset "PoissonNeuron Tests" begin
+    # LIFNeuronモジュール内の関数や構造体のテスト
+    include("../examples/PoissonNeuron.jl")
+end
+
 @testset "DoubleExpSynapse Tests with LIF" begin
     include("../examples/DoubleExpSynapse.jl")
 end
