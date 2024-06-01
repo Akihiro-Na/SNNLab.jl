@@ -1,6 +1,6 @@
-
-using Base: @kwdef
-using Parameters: @unpack # or using UnPack
+#=
+Double exponential synapseを定義するファイル
+=#
 
 # DoubleExpSynapseのパラメータ(固定)
 @kwdef struct DExpSynapseParameter{FT} <: AbstractSynapseParam{FT}
@@ -27,6 +27,7 @@ function update!(synapses::DExpSynapse, param::DExpSynapseParameter, dt, spikes:
     end
 end
 
+# DoubleExpSynapseに対するupdate!メソッドの定義 spikesがBitVector型
 function update!(synapses::DExpSynapse, param::DExpSynapseParameter, dt, spikes::BitVector)
     @unpack N, Isyn, h = synapses
     @unpack τ_syn_fast, τ_syn_slow = param
