@@ -5,12 +5,14 @@ using SNNLab
 using Random
 using Plots
 
+const FT = Float64
+
 T = 1000 # ms
-dt = 0.01f0 # ms
+dt::FT = 0.01 # ms
 nt = UInt32(T / dt) # number of timesteps
 N = UInt32(20) # ニューロンの数
 
-t = Array{Float32}(1:nt) * dt
+t = Array{FT}(1:nt) * dt
 
 # λarrを生成
 phases = 2 * π .* rand(N)
@@ -20,11 +22,11 @@ phases = 2 * π .* rand(N)
 
 # 記録用
 spikearr = BitArray(undef,nt, N)
-Isynarr = zeros(Float32, nt, N)
+Isynarr = zeros(FT, nt, N)
 
 # modelの定義
-neurons = PPPNeuron{Float32}(N=N,nt=nt)
-synapses = DExpSynapse{Float32}(N=N)
+neurons = PPPNeuron{FT}(N=N,nt=nt)
+synapses = DExpSynapse{FT}(N=N)
 
 
 # simulation

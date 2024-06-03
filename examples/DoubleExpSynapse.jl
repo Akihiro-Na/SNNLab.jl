@@ -5,26 +5,28 @@ LIFニューロンのtest
 using SNNLab
 using Plots
 
+const FT = Float64
+
 T = 450 # ms
-dt = 0.01f0 # ms
+dt::FT = 0.01 # ms
 nt = UInt32(T / dt) # number of timesteps
 N = 2 # ニューロンの数
 
 # 入力刺激
-t = Array{Float32}(1:nt) * dt
+t = Array{FT}(1:nt) * dt
 Ie = repeat(25.0f0 * ((t .> 50) - (t .> 75)) + 
             25.0f0 * ((t .> 200) - (t .> 250)) +
             50.0f0 * ((t .> 350) - (t .> 400))
             , 1, N)  # injection current
 
 # 記録用
-varr = zeros(Float32, nt, N)
+varr = zeros(FT, nt, N)
 spikearr = zeros(Bool, nt, N)
-Isynarr = zeros(Float32, nt, N)
+Isynarr = zeros(FT, nt, N)
 
 # modelの定義
-neurons = LIF{Float32}(N=N)
-synapses = DExpSynapse{Float32}(N=N)
+neurons = LIF{FT}(N=N)
+synapses = DExpSynapse{FT}(N=N)
 
 # simulation
 @time for i = 1:nt
