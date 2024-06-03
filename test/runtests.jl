@@ -16,6 +16,11 @@ end
     include("../examples/PoissonNeuron.jl")
 end
 
+@testset "Maze Env Tests" begin
+    # LIFNeuronモジュール内の関数や構造体のテスト
+    include("../examples/Maze.jl")
+end
+
 @testset "DoubleExpSynapse Tests with LIF" begin
     include("../examples/DoubleExpSynapse.jl")
 end

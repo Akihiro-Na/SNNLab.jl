@@ -13,7 +13,7 @@ end
 
 const FT = Float64
 
-T = 1000 # ms
+T = 100 # ms
 dt::FT = 0.01 # ms
 nt = UInt32(T / dt) # number of timesteps
 t = Array{FT}(1:nt) * dt
