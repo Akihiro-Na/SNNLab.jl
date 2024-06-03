@@ -25,7 +25,7 @@ end
 end
 
 # Poisson point process neuron modelのupdate!メソッドの定義
-function update!(neurons::PPPNeuron, dt, λ::Vector)
+function update!(neurons::PPPNeuron{FT}, dt::FT, λ::Vector{FT}) where FT
     @unpack N, random_numbers, tcount, spike = neurons
     neurons.spike .= random_numbers[tcount,:] .< λ*dt*1e-3 # ms to s
     
