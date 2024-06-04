@@ -7,17 +7,17 @@ using Test
 end
 
 @testset "LIFNeuron Tests" begin
-    # LIFNeuronモジュール内の関数や構造体のテスト
+    # LIFNeuronファイル内の関数や構造体のテスト
     include("../examples/LIFNeuron.jl")
 end
 
 @testset "PoissonNeuron Tests" begin
-    # LIFNeuronモジュール内の関数や構造体のテスト
+    # PoissonNeuronファイル内の関数や構造体のテスト
     include("../examples/PoissonNeuron.jl")
 end
 
 @testset "Maze Env Tests" begin
-    # LIFNeuronモジュール内の関数や構造体のテスト
+    # Mazeファイル内の関数や構造体のテスト
     include("../examples/Maze.jl")
 end
 
