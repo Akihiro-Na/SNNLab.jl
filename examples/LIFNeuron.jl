@@ -14,7 +14,7 @@ N = 3 # ニューロンの数
 
 # 入力刺激
 t = Array{FT}(1:nt) * dt
-Ie = repeat(25.0f0 * ((t .> 50) - (t .> 200)) + 50.0f0 * ((t .> 250) - (t .> 400)), 1, N)  # injection current
+Ie::Matrix{FT} = repeat(25.0 * ((t .> 50) - (t .> 200)) + 50.0 * ((t .> 250) - (t .> 400)), 1, N)  # injection current
 
 # 記録用
 varr = zeros(FT, nt, N)
