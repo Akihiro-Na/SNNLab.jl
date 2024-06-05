@@ -24,3 +24,7 @@ end
 @testset "DoubleExpSynapse Tests with LIF" begin
     include("../examples/DoubleExpSynapse.jl")
 end
+
+@testset "state2λ" begin
+    include("../examples/state2lambda.jl")
+end
