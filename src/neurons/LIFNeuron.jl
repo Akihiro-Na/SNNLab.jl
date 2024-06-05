@@ -1,7 +1,6 @@
-
-using Base: @kwdef
-using Parameters: @unpack # or using UnPack
-
+#=
+LIFニューロンの定義ファイル
+=#
 
 # LIFニューロンのパラメータ(固定)
 @kwdef struct LIFParameter{FT} <: AbstractNeuronParam{FT}
@@ -19,23 +18,22 @@ end
     N::UInt32 #ニューロンの数
     v::Vector{FT} = fill(-65.0, N); v_::Vector{FT} = fill(-65.0, N) # 膜電位, 発火電位も記録する膜電位 (mV)
     spike::Vector{Bool} = zeros(Bool, N) # 発火
-    tlast::Vector{FT} = zeros(N) # 最後の発火時刻 (ms)
+    tlast::Vector{FT} = zeros(N) # 最後の発火時刻 [ms]
     tcount::FT = 0 # 時間カウント
 end
 
 # LIFNeuronに対するupdate!メソッドの定義
-function update!(neurons::LIF, param::LIFParameter, dt, Ie::Vector)
+function update!(neurons::LIF{FT}, param::LIFParameter{FT}, dt::FT, Ie::Vector{FT}) where FT
     @unpack N, v, v_, spike, tlast, tcount = neurons
     @unpack tref, tau_m, vrest, vreset, vthr, vpeak = param
     
     @inbounds for i = 1:N
-        #v[i] += dt * ((vrest - v[i] + Ie[i]) / tau_m) # 不応期を考慮しない場合の更新式
         v[i] += dt * ((dt*tcount) > (tlast[i] + tref))*((vrest - v[i] + Ie[i]) / tau_m)
-        #v[i] += dt * ifelse(dt*tcount[1] > tlast[i] + tref, (vrest - v[i] + Ie[i]) / tau_m, 0)
     end
+    
     @inbounds for i = 1:N
         spike[i] = v[i] >= vthr
-        v_[i] = ifelse(spike[i], vpeak, v[i]) #発火時の電位も含めて記録するための変数 (除いてもよい)
+        v_[i] = ifelse(spike[i], vpeak, v[i]) #発火時の電位も含めて記録するための変数
         v[i] = ifelse(spike[i], vreset, v[i])        
         tlast[i] = ifelse(spike[i], dt*tcount, tlast[i]) # 発火時刻の更新
     end

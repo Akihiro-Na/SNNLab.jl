@@ -26,9 +26,11 @@ end
 
 # Poisson point process neuron modelのupdate!メソッドの定義
 function update!(neurons::PPPNeuron{FT}, dt::FT, λ::Vector{FT}) where FT
-    @unpack N, random_numbers, tcount, spike = neurons
-    neurons.spike .= random_numbers[tcount,:] .< λ*dt*1e-3 # ms to s
-    
+    @unpack random_numbers, tcount, spike = neurons
+    #λ_dt = λ * dt * 1e-3 # 前もって計算しておく
+    @inbounds for i in eachindex(spike)
+        spike[i] = random_numbers[tcount, i] < λ[i] * dt * 1e-3
+    end
     # time count +1
     neurons.tcount += 1
     return neurons.spike
@@ -36,10 +38,10 @@ end
 
 # LIFNeuronに対するinit!メソッドの定義
 function init!(neurons::PPPNeuron{FT}) where FT
-    @unpack N, nt, random_numbers, tcount, spike = neurons
-    tcount::UInt = 1 # 時間カウント
-    random_numbers::Matrix{FT} = rand(nt, N)
-    spike::BitVector = BitVector(zeros(Bool, N))
+    @unpack N, nt = neurons
+    neurons.tcount = 1 # 時間カウント
+    neurons.random_numbers = rand(nt, N)
+    neurons.spike = BitVector(zeros(Bool, N))
 end
 
 function get_spike(neurons::PPPNeuron)::BitVector
