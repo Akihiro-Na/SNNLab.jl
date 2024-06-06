@@ -4,6 +4,7 @@ module SNNLab
 using LinearAlgebra
 using Plots
 using Random
+using ProgressBars # for progress bar
 
 # using at define of neurons -----
 using Base: @kwdef
@@ -38,7 +39,7 @@ export DExpSynapse
 # Environment model
 export Maze
 # env_agent_interface
-export state2λ
+export State2λ
 
 # Multiple dispatch function
 export update!,init!
