@@ -1,6 +1,6 @@
 
 # state2λ のパラメータ(固定)
-@kwdef struct state2λParameter{FT} <: AbstractEnvAgentInrerfaceParam{FT}
+@kwdef struct State2λParameter{FT} <: AbstractEnvAgentInrerfaceParam{FT}
     λmax::FT = 400 # 最大の発火頻度 [Hz]
     σ::FT = 2 # place cell の配置間隔 [m]
     xmin::FT = -2
@@ -12,8 +12,8 @@
 end
 
 # state2λ modelの定義
-@kwdef mutable struct state2λ{FT} <: AbstractEnvAgentInrerface{FT}
-    param::state2λParameter = state2λParameter{FT}()
+@kwdef mutable struct State2λ{FT} <: AbstractEnvAgentInrerface{FT}
+    param::State2λParameter = State2λParameter{FT}()
     λvec::Vector{FT} = zeros(FT, param.N)
     normvec::Vector{FT} = zeros(FT, param.N)  # norm保存用vector
 end
@@ -32,7 +32,7 @@ function vector_norm_grid!(norm_grid::Vector{FT}, grid::Vector{Tuple{FT,FT}}, x,
 end
 
 # The case of 2D state 
-function update!(lambda::state2λ{FT}, param::state2λParameter{FT}, state::Tuple{FT, FT})::Vector{FT} where FT
+function update!(lambda::State2λ{FT}, param::State2λParameter{FT}, state::Tuple{FT, FT})::Vector{FT} where FT
     x, y = state
     @unpack λmax, σ, receptive_centers = param
     vector_norm_grid!(lambda.normvec, receptive_centers, x, y)
