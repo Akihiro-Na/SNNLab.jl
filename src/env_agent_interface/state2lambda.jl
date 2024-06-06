@@ -7,7 +7,7 @@
     xmax::FT = 22
     ymin::FT = -2
     ymax::FT = 22
-    receptive_centers::Vector{Tuple{FT,FT}} = vec(collect(Iterators.product(xmin:σ:xmax, ymin:σ:ymin))) # 
+    receptive_centers::Vector{Tuple{FT,FT}} = vec(collect(Iterators.product(xmin:σ:xmax, ymin:σ:ymax))) # 
     N::UInt32 = length(receptive_centers)
 end
 
