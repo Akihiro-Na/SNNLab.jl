@@ -7,24 +7,34 @@ using Test
 end
 
 @testset "LIFNeuron Tests" begin
-    # LIFNeuronファイル内の関数や構造体のテスト
-    include("../examples/LIFNeuron.jl")
+    module LIFNeuronTests
+        # LIFNeuronファイル内の関数や構造体のテスト
+        include("../examples/LIFNeuron.jl")
+    end
 end
 
 @testset "PoissonNeuron Tests" begin
-    # PoissonNeuronファイル内の関数や構造体のテスト
-    include("../examples/PoissonNeuron.jl")
+    module PoissonNeuronTests
+        # PoissonNeuronファイル内の関数や構造体のテスト
+        include("../examples/PoissonNeuron.jl")
+    end
 end
 
 @testset "Maze Env Tests" begin
-    # Mazeファイル内の関数や構造体のテスト
-    include("../examples/Maze.jl")
+    module MazeEnvTests
+        # Mazeファイル内の関数や構造体のテスト
+        include("../examples/Maze.jl")
+    end
 end
 
 @testset "DoubleExpSynapse Tests with LIF" begin
-    include("../examples/DoubleExpSynapse.jl")
+    module DoubleExpSynapseTests
+        include("../examples/DoubleExpSynapse.jl")
+    end
 end
 
 @testset "state2λ" begin
-    include("../examples/state2lambda.jl")
+    module State2LambdaTests
+        include("../examples/state2lambda.jl")
+    end
 end
