@@ -6,6 +6,7 @@ Double exponential synapseを定義するファイル
 @kwdef struct DExpSynapseParameter{FT} <: AbstractSynapseParam{FT}
     τ_syn_fast::FT = 5 # 早い時定数 [ms]
     τ_syn_slow::FT = 20 # 遅い時定数(膜の時定数と同じ？) [ms]
+    ε0::FT = 20 # [mV・ms] scaling constant
 end
 
 # DoubleExpSynapseの定義
@@ -19,22 +20,22 @@ end
 # DoubleExpSynapseに対するupdate!メソッドの定義
 function update!(synapses::DExpSynapse, param::DExpSynapseParameter, dt, spikes::Vector)
     @unpack N, Isyn, h = synapses
-    @unpack τ_syn_fast, τ_syn_slow = param
+    @unpack τ_syn_fast, τ_syn_slow, ε0 = param
     
     @inbounds for i = 1:N
         Isyn[i] += dt * (-Isyn[i]/τ_syn_slow + h[i])
-        h[i] += dt * (-h[i]/τ_syn_fast + spikes[i]/(τ_syn_fast*τ_syn_slow))
+        h[i] += dt * (-h[i]/τ_syn_fast + (ε0/dt)*spikes[i]/(τ_syn_fast*τ_syn_slow))
     end
 end
 
 # DoubleExpSynapseに対するupdate!メソッドの定義 spikesがBitVector型
 function update!(synapses::DExpSynapse, param::DExpSynapseParameter, dt, spikes::BitVector)
     @unpack N, Isyn, h = synapses
-    @unpack τ_syn_fast, τ_syn_slow = param
+    @unpack τ_syn_fast, τ_syn_slow, ε0= param
     
     @inbounds for i = 1:N
         Isyn[i] += dt * (-Isyn[i]/τ_syn_slow + h[i])
-        h[i] += dt * (-h[i]/τ_syn_fast + spikes[i]/(τ_syn_fast*τ_syn_slow))
+        h[i] += dt * (-h[i]/τ_syn_fast + (ε0/dt)*spikes[i]/(τ_syn_fast*τ_syn_slow))
     end
 end
 
