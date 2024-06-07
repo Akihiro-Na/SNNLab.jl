@@ -12,6 +12,7 @@ using SNNLab
 using Plots
 using ProgressBars
 using Parameters: @unpack # or using UnPack
+using Printf
 
 mutable struct SaveArr{FT,UIT}
     sampling_step::UIT
@@ -22,7 +23,7 @@ mutable struct SaveArr{FT,UIT}
     idx::UIT
 
     function SaveArr{FT,UIT}(dt::FT, nt::UIT, Ninput::UIT, env) where {FT, UIT}
-        sampling_step = div(10, dt)
+        sampling_step = div(100, dt)
         saveindmax = UIT(div(nt, sampling_step) + 1)
         statearr = zeros(FT, saveindmax, length(env.state))
         spikearr = BitArray(undef, nt, Ninput)
@@ -42,7 +43,7 @@ end
     t = Array{FT}(1:nt) * dt
 
     # Mazemodelの定義 ========
-    env = Maze{FT}(start=(7, 7))
+    env = Maze{FT}(start=(8, 8))
     #init!(env, (1,1),0)
     # =========================
 
@@ -83,9 +84,9 @@ end
     # ===============================
 
     init!(input_neurons)
-
+    iter = ProgressBar(1:nt)#nt
     # simulation
-    @time for i = 1:nt
+    for i in 1:1 # iter
         # input neuron ================================
         update!(lambda, lambda.param, env.state) # 1 allocation
         update!(input_neurons, dt, lambda.λvec)
@@ -105,7 +106,7 @@ end
         # LTPTrace
         update!(critic_ltp, critic_ltp.param, dt, critic_synapses.Isyn, critic_neurons.spike)
         # w update
-        global w_input2critic += td.td_error * critic_ltp.∂V_∂wij
+        @time global w_input2critic += td.td_error * critic_ltp.∂V_∂wij
         # ===============================================
 
         # actor_neurons ================================
@@ -117,7 +118,7 @@ end
         # LTPTrace
         update!(actor_ltp, actor_ltp.param, dt, actor_synapses.Isyn, actor_neurons.spike)
         # w update
-        global w_input2actor += td.td_error * actor_ltp.∂V_∂wij
+        @time global w_input2actor += td.td_error * actor_ltp.∂V_∂wij
         # ===============================================
 
         # env ===========================================
@@ -132,6 +133,7 @@ end
             savearr_actor.Isynarr[savearr_input.idx, :] = actor_synapses.Isyn
             savearr_input.idx += 1
         end
+        set_description(iter, string(@sprintf("TDerror: %f, state %f %f", td.td_error, env.state[1], env.state[2])))
     end
 
     #アニメーションのインスタンス生成
