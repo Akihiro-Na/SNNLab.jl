@@ -30,7 +30,13 @@ include("environments/Maze.jl")
 # env_agent_interface =================
 include("env_agent_interface/AbEnvAgentInterface.jl")
 include("env_agent_interface/state2lambda.jl")
+include("env_agent_interface/Spike2action.jl")
 # end of env_agent_interface ==========
+
+# leraning_rule =======================
+include("learning_rules/LTPTrace.jl")
+include("learning_rules/TDContinuous.jl")
+# =====================================
 
 # Neuron model
 export LIF, PPPNeuron
@@ -39,7 +45,9 @@ export DExpSynapse
 # Environment model
 export Maze
 # env_agent_interface
-export State2λ
+export State2λ,Spike2action
+# leraning_rule
+export TDContinuous, LTPTrace
 
 # Multiple dispatch function
 export update!,init!
