@@ -61,7 +61,7 @@ function run_state2lambda_test()
     # =========================
 
     # state2lambdaparameterの定義 ===
-    lambda = State2λ{FT}()
+    lambda = State2λ{FT,UIT}()
     Ninput = lambda.param.N
     # ===============================
 
@@ -110,13 +110,13 @@ function run_state2lambda_test()
         Isyn_values = Isynarr[timestep, :]
 
         # 点の大きさと色を設定
-        sizes = abs.(Isyn_values) .* 1000  # サイズのスケーリング（適宜調整）
+        sizes = abs.(Isyn_values) .* 1  # サイズのスケーリング（適宜調整）
         colors = Isyn_values  # 色のスケーリング
 
         scatter!(x_coords, y_coords, size=(600, 600), st=:scatter,
             marker_z=colors, markersize=sizes, c=:viridis, legend=false,
             xlabel="X", ylabel="Y",
-            clims=(0, 0.01),
+            clims=(0, 10),
             title="Receptive Centers at timestep $timestep")
     end
 
