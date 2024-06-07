@@ -36,18 +36,18 @@ end
     FT = Float64
     UIT = UInt32
 
-    T = 10000 # ms
+    T = 1000 # ms
     dt::FT = 0.01 # ms
     nt::UIT = div(T, dt) # number of timesteps
     t = Array{FT}(1:nt) * dt
 
     # Mazemodelの定義 ========
-    env = Maze{FT}(start=(1, 1))
+    env = Maze{FT}(start=(7, 7))
     #init!(env, (1,1),0)
     # =========================
 
     # state2lambdaparameterの定義 ===
-    lambda = State2λ{FT}()
+    lambda = State2λ{FT,UIT}()
     Ninput::UIT = lambda.param.N
     # ===============================
 
@@ -56,17 +56,30 @@ end
     input_synapses = DExpSynapse{FT}(N=Ninput)
     # ===============================
 
-    # LIFNeuronの定義 ===============
+    # CriticNeuronの定義 =============
+    Ncritic::UIT = 100
+    critic_neurons = LIF{FT}(N=Ncritic)
+    # 隣接行列
+    w_input2critic::Matrix{FT} = rand(Ncritic,Ninput) *3.0
+    critic_synapses = DExpSynapse{FT}(N=Ncritic)
+    td = TDContinuous{FT,UIT}(N=Ncritic)
+    critic_ltp = LTPTrace{FT,UIT}(Npost=Ncritic ,Npre=Ninput)
+    # ===============================
+
+    # ActorNeuronの定義 ===============
     Nactor::UIT = 60
     actor_neurons = LIF{FT}(N=Nactor)
     # 隣接行列
     w_input2actor::Matrix{FT} = rand(Nactor,Ninput) *3.0
     actor_synapses = DExpSynapse{FT}(N=Nactor)
+    s2a = Spike2action{FT,UIT}(Naction=Nactor)
+    actor_ltp = LTPTrace{FT,UIT}(Npost=Nactor ,Npre=Ninput)
     # ===============================
 
     # 記録用配列の確保 ==============
     savearr_input = SaveArr{FT,UIT}(dt, nt, Ninput, env)
     savearr_actor = SaveArr{FT,UIT}(dt, nt, Nactor, env)
+    savearr_critic = SaveArr{FT,UIT}(dt, nt, Ncritic, env)
     # ===============================
 
     init!(input_neurons)
@@ -81,17 +94,36 @@ end
         update!(input_synapses, input_synapses.param, dt, input_neurons.spike)
         # ==============================================
 
+        # critic_neurons ================================
+        Ie_i2c = w_input2critic * input_synapses.Isyn
+        update!(critic_neurons, critic_neurons.param, dt, Ie_i2c)
+        savearr_critic.spikearr[i, :] = critic_neurons.spike
+        # synapse
+        update!(critic_synapses, critic_synapses.param, dt, critic_neurons.spike)
+        # TD-error
+        update!(td, td.param, dt, critic_neurons.spike, env.reward)
+        # LTPTrace
+        update!(critic_ltp, critic_ltp.param, dt, critic_synapses.Isyn, critic_neurons.spike)
+        # w update
+        global w_input2critic += td.td_error * critic_ltp.∂V_∂wij
+        # ===============================================
+
         # actor_neurons ================================
-        Ie = w_input2actor * input_synapses.Isyn
-        update!(actor_neurons, actor_neurons.param, dt, Ie)
+        Ie_i2a = w_input2actor * input_synapses.Isyn
+        update!(actor_neurons, actor_neurons.param, dt, Ie_i2a)
         savearr_actor.spikearr[i, :] = actor_neurons.spike
         # synapse
         update!(actor_synapses, actor_synapses.param, dt, actor_neurons.spike)
+        # LTPTrace
+        update!(actor_ltp, actor_ltp.param, dt, actor_synapses.Isyn, actor_neurons.spike)
+        # w update
+        global w_input2actor += td.td_error * actor_ltp.∂V_∂wij
         # ===============================================
 
         # env ===========================================
-        action::FT = 2 * rand() - 1 # random action # 1 allocation
-        update!(env, env.param, action, dt) # 1 allocation
+        #2 * rand() - 1 # random action # 1 allocation
+        update!(s2a,s2a.param,actor_synapses.Isyn)
+        update!(env, env.param, s2a.action, dt) # 1 allocation
         # ===============================================
 
         if mod1(i, savearr_input.sampling_step) == 1
