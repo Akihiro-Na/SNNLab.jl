@@ -17,7 +17,7 @@ end
     param::LIFParameter = LIFParameter{FT}()
     N::UInt32 #ニューロンの数
     v::Vector{FT} = fill(-65.0, N); v_::Vector{FT} = fill(-65.0, N) # 膜電位, 発火電位も記録する膜電位 (mV)
-    spike::Vector{Bool} = zeros(Bool, N) # 発火
+    spike::BitVector = BitVector(zeros(Bool, N))
     tlast::Vector{FT} = zeros(N) # 最後の発火時刻 [ms]
     tcount::FT = 0 # 時間カウント
 end
