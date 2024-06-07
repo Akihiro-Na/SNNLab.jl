@@ -17,6 +17,7 @@ end
     param::MazeParam = MazeParam{FT}()
     start::Tuple{FT, FT}  # スタート地点
     state::Tuple{FT, FT} = start # エージェントの位置
+    reward::FT = 0
 end
 
 # 環境のupdate!関数 actionは[-1,1]
@@ -28,13 +29,32 @@ function update!(maze::Maze{FT}, param::MazeParam, action::FT, dt::FT) where FT
     if is_valid_move(state_position, param)
         maze.state = state_position
     else
-        return reward = -1.0
+        return maze.reward = -1.0
     end
 
     if is_goal_reached(maze,param)
-        return reward = 100.0
+        return maze.reward = 100.0
     else
-        return reward = 0.0
+        return maze.reward = 0.0
+    end
+end
+
+# 環境のupdate!関数 actionは[-1,1]
+function update!(maze::Maze{FT}, param::MazeParam, action::Vector{FT}, dt::FT) where FT
+    x, y = maze.state
+    dx = param.velocity * action[1] * dt
+    dy = param.velocity * action[2] * dt
+    state_position = (x + dx, y + dy)
+    if is_valid_move(state_position, param)
+        maze.state = state_position
+    else
+        return maze.reward = -1.0
+    end
+
+    if is_goal_reached(maze,param)
+        return maze.reward = 100.0
+    else
+        return maze.reward = 0.0
     end
 end
 
