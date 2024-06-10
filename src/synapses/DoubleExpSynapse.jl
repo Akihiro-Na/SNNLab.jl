@@ -36,6 +36,7 @@ function update!(synapses::DExpSynapse, param::DExpSynapseParameter, dt, spikes:
     @inbounds for i = 1:N
         Isyn[i] += dt * (-Isyn[i]/τ_syn_slow + h[i])
         h[i] += dt * (-h[i]/τ_syn_fast + (ε0/dt)*spikes[i]/(τ_syn_fast*τ_syn_slow))
+        # spike による入力電流はdtを変えても変化しない
     end
 end
 
