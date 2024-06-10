@@ -4,13 +4,12 @@ Poissonニューロンのtest用コード
 using SNNLab
 using Random
 using Plots
-using BenchmarkTools
 
 function run_PPPNeuron_test()
     FT = Float64
 
     T = 1000 # ms
-    dt::FT = 0.01 # ms
+    dt::FT = 1 # ms
     nt = UInt32(T / dt) # number of timesteps
 
     N = UInt32(20) # ニューロンの数
@@ -34,7 +33,7 @@ function run_PPPNeuron_test()
 
     # simulation
     init!(neurons)
-    for i = 1:nt
+    @time for i = 1:nt
         update!(neurons, dt, λarr[:, i])#neurons.random_numbers[i,:] .< λarr[:,i]*dt*1e-3
         spikearr[i, :] = neurons.spike
 
@@ -57,4 +56,4 @@ function run_PPPNeuron_test()
     p = plot(p1, p2, p3, layout=(3, 1), size=(1000, 800))
 end
 
-@benchmark run_PPPNeuron_test()
+run_PPPNeuron_test()
