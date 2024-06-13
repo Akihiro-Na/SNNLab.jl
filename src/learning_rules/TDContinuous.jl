@@ -4,11 +4,11 @@ CriticNeuronのスパイクとrewardsからTD誤差を計算する
 
 # TDContinuousのパラメータ(固定)
 @kwdef struct TDContinuousParameter{FT}
-    τ_fast::FT = 5 # 早い時定数 [ms]
-    τ_slow::FT = 20 # 遅い時定数(膜の時定数と同じ？) [ms]
+    τ_fast::FT = 50 # 早い時定数 [ms]
+    τ_slow::FT = 200 # 遅い時定数 [ms]
     τ_reward::FT = 4000 # rewardsの減るスピード[ms]
     r0::FT = 2 # [reward units]*s scaling constant
-    V0::FT = -40 #
+    V0::FT = -40 # 
 end
 
 # TDContinuousの定義
@@ -25,15 +25,15 @@ end
 
 # TDContinuousに対するupdate!メソッドの定義
 function update!(td::TDContinuous, param::TDContinuousParameter, dt, spikes::BitVector, reward)
-    @unpack N, trace_vector, h, td_error = td
+    @unpack N, trace_vector, h = td
     @unpack τ_fast, τ_slow, τ_reward, r0, V0 = param
-    τ_1 = (τ_slow - τ_fast)/(τ_slow*τ_fast)
-    τ_2 = τ_1 * (τ_fast + τ_reward)/(τ_fast*τ_reward)
+    kτ_1 = (τ_slow - τ_fast)/(τ_slow*τ_fast)
+    kτ_2 = kτ_1 * (τ_fast + τ_reward)/(τ_fast*τ_reward)
     @inbounds for i = 1:N
-        trace_vector[i] += dt * (-trace_vector[i]/τ_slow + h[i] + spikes[i]/τ_1)
-        h[i] += dt * (-h[i]/τ_fast - spikes[i]/τ_2)
+        trace_vector[i] += dt * (-trace_vector[i]/τ_slow + h[i] + spikes[i]*kτ_1)
+        h[i] += dt * (-h[i]/τ_fast - spikes[i]*kτ_2)
     end
-    td_error = (r0/N) * sum(trace_vector) - V0/τ_reward + reward
+    td.td_error = (r0/N) * sum(trace_vector) - V0/τ_reward + reward
 end
 
 

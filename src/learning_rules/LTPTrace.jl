@@ -5,8 +5,8 @@ CriticNeuronのスパイクと入力されるシナプス電流からトレー�
 
 # LTPTraceのパラメータ(固定)
 @kwdef struct LTPTraceParameter{FT}
-    τ_fast::FT = 5 # 早い時定数 [ms]
-    τ_slow::FT = 20 # 遅い時定数(膜の時定数と同じ？) [ms]
+    τ_fast::FT = 50 # 早い時定数 [ms]
+    τ_slow::FT = 200 # 遅い時定数(膜の時定数と同じ？) [ms]
     τ_reward::FT = 4000 # rewardsの減るスピード[ms]
     Δu::FT = 2
     r0::FT = 2
@@ -29,16 +29,16 @@ end
 
 # LTPTraceに対するupdate!メソッドの定義
 function update!(ltp_trace::LTPTrace{FT}, param::LTPTraceParameter{FT}, dt::FT, Isyn::Vector{FT}, critic_spikes::BitVector) where {FT}
-    @unpack Npost, Npre, trace_matrix, h, ∂V_∂wij = ltp_trace
+    @unpack Npost, Npre, trace_matrix, h, η = ltp_trace
     @unpack τ_fast, τ_slow, τ_reward, r0, Δu = param
 
     @inbounds for j = 1:Npre
         @inbounds for i = 1:Npost
             trace_matrix[i,j] += dt * (-trace_matrix[i,j] / τ_slow + h[i,j])
-            h[i,j] += dt * (-h[i,j]/τ_fast - Isyn[j]*critic_spikes[i]/(τ_slow*τ_fast))
+            h[i,j] += dt * (-h[i,j]/τ_fast + Isyn[j]*critic_spikes[i]/(τ_slow*τ_fast))
         end
     end
-    ∂V_∂wij = (r0 / (Npost*Δu)) * trace_matrix
+    ltp_trace.∂V_∂wij = (η*r0 / (Npost*Δu)) * trace_matrix
 end
 
 
