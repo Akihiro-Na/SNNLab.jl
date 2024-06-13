@@ -9,7 +9,7 @@ function run_LIFNeuron_test()
     FT = Float64
 
     T = 450 # ms
-    dt::FT = 0.01 # ms
+    dt::FT = 1 # ms
     nt = UInt32(T / dt) # number of timesteps
     N = 3 # ニューロンの数
 
@@ -30,7 +30,6 @@ function run_LIFNeuron_test()
     end
 
     # Plots
-
     i = 1
     p1 = plot(t, varr[:, i], color="black", legend=false)
     ylabel!(p1, "Membrane potential [mV]")
