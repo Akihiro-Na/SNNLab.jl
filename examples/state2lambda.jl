@@ -55,7 +55,7 @@ function run_state2lambda_test()
 
 
     # Mazemodelの定義 ========
-    env = Maze{FT}(start=(1, 1))
+    env = Maze{FT}(start=[1, 1])
 
     #init!(env, (1,1),0)
     # =========================

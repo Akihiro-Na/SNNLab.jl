@@ -22,7 +22,7 @@ function run_Maze_test()
 
 
     # modelの定義
-    env = Maze{FT}(start=(1, 1))
+    env = Maze{FT}(start=[1, 1])
     #init!(env, (1,1),0)
 
 
@@ -35,7 +35,7 @@ function run_Maze_test()
         action = 2 * rand() - 1 # random action
         update!(env, param, action, dt)
         #plot animatin
-        plot(env.state, size=(250, 250), st=:scatter,
+        plot([env.state[1]], [env.state[2]], size=(250, 250), st=:scatter,
             xlims=xylim, ylims=xylim)
         plt = plot_circle!(param.goal[1], param.goal[2], param.goal_radius; color=:red)
         if mod(i, 1000) == 0
