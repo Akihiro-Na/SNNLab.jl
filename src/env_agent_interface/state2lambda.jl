@@ -7,7 +7,9 @@
     xmax::FT = 22
     ymin::FT = -2
     ymax::FT = 22
-    receptive_centers::Vector{Tuple{FT,FT}} = vec(collect(Iterators.product(xmin:σ:xmax, ymin:σ:ymax))) # 
+    receptive_x::StepRangeLen{FT, Base.TwicePrecision{FT}, Base.TwicePrecision{FT}, UIT} = xmin:σ:xmax
+    receptive_y::StepRangeLen{FT, Base.TwicePrecision{FT}, Base.TwicePrecision{FT}, UIT} = ymin:σ:ymax
+    receptive_centers::Vector{Tuple{FT,FT}} = vec(collect(Iterators.product(receptive_x, receptive_y))) # 
     N::UIT = length(receptive_centers)
 end
 
@@ -31,7 +33,7 @@ function vector_norm_grid!(norm_grid::Vector{FT}, grid::Vector{Tuple{FT,FT}}, x,
     return norm_grid
 end
 
-# The case of 2D state 
+# The case of 2D state for tuple state
 function update!(lambda::State2λ{FT,UIT}, param::State2λParameter{FT,UIT}, state::Tuple{FT, FT})::Vector{FT} where {FT,UIT}
     x, y = state
     @unpack λmax, σ, receptive_centers = param
@@ -42,3 +44,12 @@ function update!(lambda::State2λ{FT,UIT}, param::State2λParameter{FT,UIT}, sta
     return lambda.λvec
 end
 
+# The case of 2D state for vector state
+function update!(lambda::State2λ{FT,UIT}, param::State2λParameter{FT,UIT}, state::Vector{FT})::Vector{FT} where {FT,UIT}
+    @unpack λmax, σ, receptive_centers = param
+    vector_norm_grid!(lambda.normvec, receptive_centers, state[1], state[2])
+    for i in eachindex(lambda.normvec)
+        lambda.λvec[i] = λmax * exp(-lambda.normvec[i]^2 / σ^2)
+    end
+    return lambda.λvec
+end

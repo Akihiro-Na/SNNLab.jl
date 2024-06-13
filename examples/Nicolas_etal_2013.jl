@@ -13,171 +13,177 @@ using Plots
 using ProgressBars
 using Parameters: @unpack # or using UnPack
 using Printf
+using Interpolations # for Interp2D
 
-mutable struct SaveArr{FT,UIT}
-    sampling_step::UIT
-    saveindmax::UIT
-    statearr::Array{FT}
-    spikearr::BitArray
-    Isynarr::Array{FT}
-    idx::UIT
+function Interp2D(data, factor)
 
-    function SaveArr{FT,UIT}(dt::FT, nt::UIT, Ninput::UIT, env) where {FT, UIT}
-        sampling_step = div(100, dt)
-        saveindmax = UIT(div(nt, sampling_step) + 1)
-        statearr = zeros(FT, saveindmax, length(env.state))
-        spikearr = BitArray(undef, nt, Ninput)
-        Isynarr = zeros(FT, saveindmax, Ninput)
-        idx = 1
-        new{FT,UIT}(sampling_step, saveindmax, statearr, spikearr, Isynarr, idx)
+    IC = CubicSplineInterpolation((axes(data, 1), axes(data, 2)), data)
+
+    finerx = LinRange(firstindex(data, 1), lastindex(data, 1), size(data, 1) * factor)
+    finery = LinRange(firstindex(data, 2), lastindex(data, 2), size(data, 2) * factor)
+    nx = length(finerx)
+    ny = length(finery)
+
+    data_interp = Array{Float64}(undef, nx, ny)
+    for i ∈ 1:nx, j ∈ 1:ny
+        data_interp[i, j] = IC(finerx[i], finery[j])
     end
+
+    return finery, finerx, data_interp
+
 end
 
-#function run_state2lambda_test()
-    FT = Float64
-    UIT = UInt32
+@kwdef mutable struct SaveArr{FT,UIT}
+    Nactor::UIT
+    Ninput::UIT
+    dt::FT
+    nt::FT
+    sampling_interval::UIT # ms
+    sampling_step::UIT = div(sampling_interval, dt) # [step]
+    saveindmax::UIT = UIT(div(nt, sampling_step) + 1)
+    # save array
+    statearr::Array{FT} = zeros(FT, saveindmax, 2) # 2 is state length
+    inputIsynarr::Array{FT} = zeros(FT, saveindmax, Ninput)
+    actorIsynarr::Array{FT} = zeros(FT, saveindmax, Nactor)
+    wi2c_mean::Array{FT} = zeros(FT, saveindmax, Ninput)
+    wi2a_mean::Array{FT} = zeros(FT, saveindmax, 2, Ninput)
+    tdarr::Vector{FT} = zeros(FT, saveindmax)
+    idx::UIT = 1
+    # spikearr = BitArray(undef, nt, Ninput)
+end
 
-    T = 1000 # ms
-    dt::FT = 0.01 # ms
-    nt::UIT = div(T, dt) # number of timesteps
-    t = Array{FT}(1:nt) * dt
+function plot_receptive_centers!(receptive_centers::Vector{Tuple{FT,FT}}, Isynarr::Matrix{FT}, timestep, td_error) where {FT}
+    x_coords = [center[1] for center in receptive_centers]
+    y_coords = [center[2] for center in receptive_centers]
 
-    # Mazemodelの定義 ========
-    env = Maze{FT}(start=(8, 8))
-    #init!(env, (1,1),0)
-    # =========================
+    # 指定したタイムステップの Isyn 値を取得
+    Isyn_values = Isynarr[timestep, :]
 
-    # state2lambdaparameterの定義 ===
-    lambda = State2λ{FT,UIT}()
-    Ninput::UIT = lambda.param.N
-    # ===============================
+    # 点の大きさと色を設定
+    sizes = abs.(Isyn_values) .* 1  # サイズのスケーリング（適宜調整）
+    colors = Isyn_values  # 色のスケーリング
 
-    # PoissonNeuronの定義 ===========
-    input_neurons = PPPNeuron{FT}(N=Ninput, nt=nt)
-    input_synapses = DExpSynapse{FT}(N=Ninput)
-    # ===============================
+    scatter!(x_coords, y_coords, size=(600, 600), st=:scatter,
+        marker_z=colors, markersize=sizes, c=:viridis, legend=false,
+        xlabel="X", ylabel="Y",
+        clims=(0, 10.0),
+        title="timestep $timestep, td error = $td_error")
+end
 
-    # CriticNeuronの定義 =============
-    Ncritic::UIT = 100
-    critic_neurons = LIF{FT}(N=Ncritic)
-    # 隣接行列
-    w_input2critic::Matrix{FT} = rand(Ncritic,Ninput) *3.0
-    critic_synapses = DExpSynapse{FT}(N=Ncritic)
-    td = TDContinuous{FT,UIT}(N=Ncritic)
-    critic_ltp = LTPTrace{FT,UIT}(Npost=Ncritic ,Npre=Ninput)
-    # ===============================
+function plot_circle!(x, y, r; color=:red)
+    θ = range(0, 2π, 100)
+    xc = x .+ r .* cos.(θ)
+    yc = y .+ r .* sin.(θ)
+    plot!(xc, yc, seriestype=:shape, lw=2, color=color)
+end
 
-    # ActorNeuronの定義 ===============
-    Nactor::UIT = 60
-    actor_neurons = LIF{FT}(N=Nactor)
-    # 隣接行列
-    w_input2actor::Matrix{FT} = rand(Nactor,Ninput) *3.0
-    actor_synapses = DExpSynapse{FT}(N=Nactor)
-    s2a = Spike2action{FT,UIT}(Naction=Nactor)
-    actor_ltp = LTPTrace{FT,UIT}(Npost=Nactor ,Npre=Ninput)
-    # ===============================
+# ベクトル場のplot ===================================================
+# as: arrow head size 0-1 (fraction of arrow length;  la: arrow alpha transparency 0-1
+# arrow0!は次のURLを参考https://discourse.julialang.org/t/plots-jl-arrows-style-in-quiver/13659/5
+function arrow0!(x, y, u, v; as=0.1, lw=1, lc=:black, la=1)
+    nuv = sqrt(u^2 + v^2)
+    v1, v2 = [u; v] / nuv, [-v; u] / nuv
+    v4 = (3 * v1 + v2) / 3.1623  # sqrt(10) to get unit vector
+    v5 = v4 - 2 * (v4' * v2) * v2
+    v4, v5 = as * nuv * v4, as * nuv * v5
+    plot!([x, x + u], [y, y + v], lw=lw, lc=lc, la=la, label=false)
+    plot!([x + u, x + u - v5[1]], [y + v, y + v - v5[2]], lw=lw, lc=lc, la=la, label=false)
+    plot!([x + u, x + u - v4[1]], [y + v, y + v - v4[2]], lw=lw, lc=lc, la=la, label=false)
+end
 
-    # 記録用配列の確保 ==============
-    savearr_input = SaveArr{FT,UIT}(dt, nt, Ninput, env)
-    savearr_actor = SaveArr{FT,UIT}(dt, nt, Nactor, env)
-    savearr_critic = SaveArr{FT,UIT}(dt, nt, Ncritic, env)
-    # ===============================
 
-    init!(input_neurons)
-    iter = ProgressBar(1:nt)#nt
-    # simulation
-    for i in 1:1 # iter
-        # input neuron ================================
-        update!(lambda, lambda.param, env.state) # 1 allocation
-        update!(input_neurons, dt, lambda.λvec)
-        savearr_input.spikearr[i, :] = input_neurons.spike # 1 allocation
-        # synapse
-        update!(input_synapses, input_synapses.param, dt, input_neurons.spike)
-        # ==============================================
+#function run_nicolas2013_test()
+FT = Float32
+UIT = UInt32
 
-        # critic_neurons ================================
-        Ie_i2c = w_input2critic * input_synapses.Isyn
-        update!(critic_neurons, critic_neurons.param, dt, Ie_i2c)
-        savearr_critic.spikearr[i, :] = critic_neurons.spike
-        # synapse
-        update!(critic_synapses, critic_synapses.param, dt, critic_neurons.spike)
-        # TD-error
-        update!(td, td.param, dt, critic_neurons.spike, env.reward)
-        # LTPTrace
-        update!(critic_ltp, critic_ltp.param, dt, critic_synapses.Isyn, critic_neurons.spike)
-        # w update
-        @time global w_input2critic += td.td_error * critic_ltp.∂V_∂wij
-        # ===============================================
+T::FT = 600 * 10^3 # ms
+dt::FT = 1 # ms
+sampling_interval::UIT = 600# ms for save data interval
+nt::UIT = div(T, dt) # number of timesteps
+t = Array{FT}(1:nt) * dt
 
-        # actor_neurons ================================
-        Ie_i2a = w_input2actor * input_synapses.Isyn
-        update!(actor_neurons, actor_neurons.param, dt, Ie_i2a)
-        savearr_actor.spikearr[i, :] = actor_neurons.spike
-        # synapse
-        update!(actor_synapses, actor_synapses.param, dt, actor_neurons.spike)
-        # LTPTrace
-        update!(actor_ltp, actor_ltp.param, dt, actor_synapses.Isyn, actor_neurons.spike)
-        # w update
-        @time global w_input2actor += td.td_error * actor_ltp.∂V_∂wij
-        # ===============================================
+# Maze modelの定義 ========
+env = Maze{FT}(start=[8, 8])
+#init!(env, (1,1),0)
+# =========================
 
-        # env ===========================================
-        #2 * rand() - 1 # random action # 1 allocation
-        update!(s2a,s2a.param,actor_synapses.Isyn)
-        update!(env, env.param, s2a.action, dt) # 1 allocation
-        # ===============================================
+# SNNAgent modelの定義 ========
+Ncritic::UIT = 100
+Nactor::UIT = 180
+agent = TDLTPAgent{FT,UIT}(Ncritic=Ncritic, Nactor=Nactor, nt=nt)
+init!(agent.network)
+Ninput = agent.lambda.param.N
+#init!(agent, )
+# =========================
 
-        if mod1(i, savearr_input.sampling_step) == 1
-            savearr_input.Isynarr[savearr_input.idx, :] = input_synapses.Isyn # 1 allocation
-            savearr_input.statearr[savearr_input.idx, :] .= env.state
-            savearr_actor.Isynarr[savearr_input.idx, :] = actor_synapses.Isyn
-            savearr_input.idx += 1
-        end
-        set_description(iter, string(@sprintf("TDerror: %f, state %f %f", td.td_error, env.state[1], env.state[2])))
+savearr = SaveArr{FT,UIT}(Ninput=Ninput, Nactor=Nactor, nt=nt, dt=dt, sampling_interval=sampling_interval)
+
+iter = ProgressBar(1:nt)#nt
+# simulation
+for i in iter
+    # agent =========================================
+    update!(agent, dt, env.state, env.reward) # 1 allocation
+    # env ===========================================
+    update!(env, env.param, agent.s2a.action, dt) # 1 allocation
+    # ===============================================
+    #println(sum(abs.(agent.network.critic_ltp.∂V_∂wij)))
+    #println(agent.network.td.td_error)
+    # save data =====================================
+    if mod1(i, savearr.sampling_step) == 1
+        savearr.statearr[savearr.idx, :] = env.state
+        savearr.inputIsynarr[savearr.idx, :] = agent.network.input_synapses.Isyn
+        savearr.actorIsynarr[savearr.idx, :] = agent.network.actor_synapses.Isyn
+        savearr.wi2c_mean[savearr.idx, :] = ones(Ncritic)' * agent.network.w_input2critic / Ncritic
+        savearr.wi2a_mean[savearr.idx, :, :] = agent.s2a.param.actionset * agent.network.w_input2actor / Nactor
+        savearr.tdarr[savearr.idx] = agent.network.td.td_error
+        savearr.idx += 1
     end
+    # ===============================================
+    set_description(iter, string(@sprintf("action: (%+4f, %+4f), state (%+4f %+4f), reward %+4f",
+        agent.s2a.action[1], agent.s2a.action[2], env.state[1], env.state[2], env.reward)))
+end
 
-    #アニメーションのインスタンス生成
+#アニメーションのインスタンス生成
 
-    function plot_receptive_centers!(receptive_centers::Vector{Tuple{Float64,Float64}}, Isynarr::Matrix{Float64}, timestep::Int)
-        x_coords = [center[1] for center in receptive_centers]
-        y_coords = [center[2] for center in receptive_centers]
 
-        # 指定したタイムステップの Isyn 値を取得
-        Isyn_values = Isynarr[timestep, :]
 
-        # 点の大きさと色を設定
-        sizes = abs.(Isyn_values) .* 1  # サイズのスケーリング（適宜調整）
-        colors = Isyn_values  # 色のスケーリング
+anim = Animation()
 
-        scatter!(x_coords, y_coords, size=(600, 600), st=:scatter,
-            marker_z=colors, markersize=sizes, c=:viridis, legend=false,
-            xlabel="X", ylabel="Y",
-            clims=(0, 10.0),
-            title="Receptive Centers at timestep $timestep")
-    end
+xylim = (-2, 22)
+df::UIT = 1
 
-    function plot_circle!(x, y, r; color=:red)
-        θ = range(0, 2π, 100)
-        xc = x .+ r .* cos.(θ)
-        yc = y .+ r .* sin.(θ)
-        plot!(xc, yc, seriestype=:shape, lw=2, color=color)
-    end
-    
-    anim = Animation()
-    xylim = (-2, 22)
-    df::UIT = 1
-    for i in ProgressBar(1:df:savearr_input.saveindmax)
-        @unpack goal, goal_radius = env.param
-        x, y = savearr_input.statearr[i, :]
+sizefactor = 8
+length_receptive_x = length(agent.lambda.param.receptive_x)
+length_receptive_y = length(agent.lambda.param.receptive_y)
+x_heat = collect(LinRange{FT}(agent.lambda.param.xmin, agent.lambda.param.xmax, length_receptive_x * sizefactor))
+y_heat = collect(LinRange{FT}(agent.lambda.param.xmin, agent.lambda.param.xmax, length_receptive_x * sizefactor))
+clim = (0, 3)
+for i in ProgressBar(1:df:savearr.saveindmax)
+    @unpack goal, goal_radius = env.param
+    x = savearr.statearr[i, 1]
+    y = savearr.statearr[i, 2]
 
-        #plot animatin
-        plot([x], [y], size=(250, 250), st=:scatter,
-            xlims=xylim, ylims=xylim)
-        plt = plot_circle!(goal[1], goal[2], goal_radius; color=:red)
-        plot_receptive_centers!(lambda.param.receptive_centers, savearr_input.Isynarr, i)
-        frame(anim, plt)
-    end
-    gif(anim, "maze.gif", fps=50)
+    _, _, c_value = Interp2D(reshape(savearr.wi2c_mean[i, :], (length_receptive_y, length_receptive_x))', sizefactor)
+
+    #plot animatin
+    plt = heatmap(x_heat, y_heat, c_value, clims=clim)
+    plot_circle!(goal[1], goal[2], goal_radius; color=:red)
+    # plot_receptive_centers!(agent.lambda.param.receptive_centers, savearr.inputIsynarr, i, savearr.tdarr[i])
+    X = [i for i in agent.lambda.param.receptive_x, j in 1:length_receptive_y]
+    Y = [j for i in 1:length_receptive_x, j in agent.lambda.param.receptive_y]
+    dx = reshape(savearr.wi2a_mean[i,1,:],(length_receptive_y, length_receptive_x))*10
+    dy = reshape(savearr.wi2a_mean[i,2,:],(length_receptive_y, length_receptive_x))*10
+    # プロット
+    arrow0!.(X, Y, dx, dy; as=0.4, lw=3, lc=:red, la=1) # 要検証 ##############
+    title_str = @sprintf("Timestep %d, td error = %.7f", i, savearr.tdarr[i])
+    plot!([x], [y], st=:scatter,
+        xlims=xylim, ylims=xylim,
+        size=(600, 600), aspect_ratio=1, legend=false,
+        xlabel="X", ylabel="Y",
+        title=title_str)
+    frame(anim, plt)
+end
+gif(anim, "maze.gif", fps=10)
 
 #end
-#run_state2lambda_test()
+#run_nicolas2013_test()
