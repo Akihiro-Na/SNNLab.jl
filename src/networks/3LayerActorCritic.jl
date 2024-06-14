@@ -4,10 +4,9 @@ L3ActorCritic networkの定義ファイル
 
 # L3ActorCritic networkのパラメータ(固定)
 @kwdef struct L3ActorCriticParameter{FT}
-    
+    wmin::FT = 0
+    wmax::FT = 3
 end
-
-
 
 # L3ActorCritic networkの定義
 @kwdef mutable struct L3ActorCritic{FT,UIT}
@@ -15,7 +14,8 @@ end
     Ncritic::UIT
     Nactor::UIT
     nt::UIT
-
+    param = L3ActorCriticParameter{FT}()
+    
     # PoissonNeuronの定義 ===========
     input_neurons = PPPNeuron{FT}(N=Ninput, nt=nt)
     input_synapses = DExpSynapse{FT}(N=Ninput)
@@ -65,6 +65,7 @@ function update!(network::L3ActorCritic{FT,UIT}, λvec::Vector{FT}, dt::FT, rewa
     update!(network.critic_ltp, network.critic_ltp.param, dt, network.input_synapses.Isyn, network.critic_neurons.spike)
     # w update
     network.w_input2critic += network.td.td_error * network.critic_ltp.∂V_∂wij *dt
+    network.w_input2critic = valid_weight(network.w_input2critic,network.param)
     # ===============================================
 
     # actor_neurons ================================
@@ -76,6 +77,7 @@ function update!(network::L3ActorCritic{FT,UIT}, λvec::Vector{FT}, dt::FT, rewa
     update!(network.actor_ltp, network.actor_ltp.param, dt, network.input_synapses.Isyn, network.actor_neurons.spike)
     # w update
     network.w_input2actor += network.td.td_error * network.actor_ltp.∂V_∂wij *dt
+    network.w_input2actor = valid_weight(network.w_input2actor,network.param)
     # ===============================================
 
     return network.actor_synapses.Isyn
@@ -96,4 +98,11 @@ function init!(network::L3ActorCritic)
     for i in 1:network.Nactor
         network.w_actor2actor[i,:] = circshift(wvec, i-ceil(network.Nactor/2))
     end
+end
+
+# 有効な重みの更新かどうかをチェックする関数 ----------------------
+function valid_weight(w::Matrix{FT}, param::L3ActorCriticParameter{FT})::Matrix{FT} where FT
+    w = ifelse.(w .<= param.wmin, param.wmin,
+            ifelse.(w .>= param.wmax, param.wmax, w))
+    return w
 end
