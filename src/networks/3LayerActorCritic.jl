@@ -15,7 +15,7 @@ end
     Nactor::UIT
     nt::UIT
     param = L3ActorCriticParameter{FT}()
-    
+
     # PoissonNeuronの定義 ===========
     input_neurons = PPPNeuron{FT}(N=Ninput, nt=nt)
     input_synapses = DExpSynapse{FT}(N=Ninput)
@@ -26,7 +26,7 @@ end
     critic_synapses = DExpSynapse{FT}(N=Ncritic)
     # 隣接行列
     w_input2critic::Matrix{FT} = rand(Ncritic,Ninput)*5
-    Ie_i2c::Vector{FT} = w_input2critic * input_synapses.Isyn
+    Ie_i2c::Vector{FT} = zeros(Ncritic)
     # TD誤差と学習用トレース
     td = TDContinuous{FT,UIT}(N=Ncritic)
     critic_ltp = LTPTrace{FT,UIT}(Npost=Ncritic ,Npre=Ninput)
@@ -40,7 +40,7 @@ end
     # actor to actor
     w_actor2actor::Matrix{FT} = zeros(Nactor,Nactor)
     
-    Ie_i2a::Vector{FT} = w_input2actor * input_synapses.Isyn
+    Ie_i2a::Vector{FT} = zeros(Nactor)
     # 学習用トレース
     actor_ltp = LTPTrace{FT,UIT}(Npost=Nactor ,Npre=Ninput)
     # ===============================
@@ -87,7 +87,7 @@ end
 # L3ActorCriticNeuronに対するinit!メソッドの定義
 function init!(network::L3ActorCritic)
     network.w_input2critic = rand(network.Ncritic,network.Ninput)*5
-    network.w_input2actor = rand(network.Nactor,network.Ninput)
+    network.w_input2actor = rand(network.Nactor,network.Ninput)*2
     function fa2a(x,Nactor)
         f = exp(-((x-ceil(Nactor/2))/2)^2)
     end

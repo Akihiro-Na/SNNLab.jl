@@ -96,9 +96,9 @@ end
 FT = Float32
 UIT = UInt32
 
-T::FT = 600 * 10^3 # ms
+T::FT = 60 * 10^3 # ms
 dt::FT = 1 # ms
-sampling_interval::UIT = 600# ms for save data interval
+sampling_interval::UIT = 1000# ms for save data interval
 nt::UIT = div(T, dt) # number of timesteps
 t = Array{FT}(1:nt) * dt
 
@@ -120,7 +120,7 @@ savearr = SaveArr{FT,UIT}(Ninput=Ninput, Nactor=Nactor, nt=nt, dt=dt, sampling_i
 
 iter = ProgressBar(1:nt)#nt
 # simulation
-for i in iter
+@time for i in iter
     # agent =========================================
     update!(agent, dt, env.state, env.reward) # 1 allocation
     # env ===========================================

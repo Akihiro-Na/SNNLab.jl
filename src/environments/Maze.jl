@@ -8,7 +8,7 @@ Maze環境の定義ファイル
     width::FT = 20 # [m]
     goal::Vector{FT} = [10,10] # ゴール地点
     goal_radius::FT = 1 # [m]
-    velocity::FT = 10*10^-3 # [m/ms]
+    velocity::FT = 1*10^-3 # [m/ms]
     # obstacles::Vector{Tuple{FT, FT, FT, FT}}
 end
 
@@ -26,8 +26,8 @@ function update!(maze::Maze{FT}, param::MazeParam, action::FT, dt::FT) where FT
     dx = param.velocity * cospi(action) * dt
     dy = param.velocity * sinpi(action) * dt
     maze.next_state = [maze.state[1] + dx, maze.state[2] + dy]
-    if is_valid_move(maze.next_state, param)
-        maze.state = maze.next_state
+    if is_valid_move(maze.next_state, maze, param)
+        
     else
         return maze.reward = -1.0
     end
@@ -44,14 +44,14 @@ function update!(maze::Maze{FT}, param::MazeParam, action::Vector{FT}, dt::FT) w
     dx = param.velocity * action[1] * dt
     dy = param.velocity * action[2] * dt
     maze.next_state = [maze.state[1] + dx, maze.state[2] + dy]
-    if is_valid_move(maze.next_state, param)
-        maze.state = maze.next_state
+    if is_valid_move(maze.next_state, maze, param)
+        
     else
         return maze.reward = -1.0
     end
 
     if is_goal_reached(maze,param)
-        return maze.reward = 100.0
+        return maze.reward = 1.0
     else
         return maze.reward = 0.0
     end
@@ -77,11 +77,16 @@ function init!(maze::Maze, start::Vector{FT}, num_obstacles::Int) where FT
 end
 
 # 有効な移動かどうかをチェックする関数 ----------------------
-function is_valid_move(mazestate::Vector{FT}, param::MazeParam)::Bool where FT
+function is_valid_move(mazestate::Vector{FT},maze::Maze{FT}, param::MazeParam{FT})::Bool where FT
     x = mazestate[1]
     y = mazestate[2]
     # 迷路の境界チェック
     if x < 0 || x > param.width || y < 0 || y > param.hight
+        x = ifelse(x <= 0, 0,
+            ifelse(x >= param.width, param.width, x))
+        y = ifelse(y <= 0, 0,
+            ifelse(y >= param.hight, param.hight, y))
+        maze.state = [x,y]
         return false
     end
     # 障害物との衝突チェック
@@ -92,6 +97,7 @@ function is_valid_move(mazestate::Vector{FT}, param::MazeParam)::Bool where FT
         end
     end
     =#
+    maze.state = [x,y]
     return true
 end
 

@@ -2,13 +2,15 @@
 # state2λ のパラメータ(固定)
 @kwdef struct State2λParameter{FT,UIT} <: AbstractEnvAgentInrerfaceParam{FT,UIT}
     λmax::FT = 400 # 最大の発火頻度 [Hz]
-    σ::FT = 2 # place cell の配置間隔 [m]
+    σ::FT = 4 # place cell の配置間隔 [m]
+    xinterval::FT = 2
+    yinterval::FT = 2
     xmin::FT = -2
     xmax::FT = 22
     ymin::FT = -2
     ymax::FT = 22
-    receptive_x::StepRangeLen{FT, Base.TwicePrecision{FT}, Base.TwicePrecision{FT}, UIT} = xmin:σ:xmax
-    receptive_y::StepRangeLen{FT, Base.TwicePrecision{FT}, Base.TwicePrecision{FT}, UIT} = ymin:σ:ymax
+    receptive_x::StepRangeLen{FT, Base.TwicePrecision{FT}, Base.TwicePrecision{FT}, UIT} = xmin:xinterval:xmax
+    receptive_y::StepRangeLen{FT, Base.TwicePrecision{FT}, Base.TwicePrecision{FT}, UIT} = ymin:yinterval:ymax
     receptive_centers::Vector{Tuple{FT,FT}} = vec(collect(Iterators.product(receptive_x, receptive_y))) # 
     N::UIT = length(receptive_centers)
 end
