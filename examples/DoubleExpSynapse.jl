@@ -7,11 +7,11 @@ using Plots
 
 function run_DExpSynapse_test()
     FT = Float64
-
+    UIT = UInt32
     T = 450 # ms
     dt::FT = 0.01 # ms
     nt = UInt32(T / dt) # number of timesteps
-    N = 2 # ニューロンの数
+    N::UIT = 4 # ニューロンの数
 
     # 入力刺激
     t = Array{FT}(1:nt) * dt
@@ -25,17 +25,18 @@ function run_DExpSynapse_test()
     Isynarr = zeros(FT, nt, N)
 
     # modelの定義
-    neurons = LIF{FT}(N=N)
-    synapses = DExpSynapse{FT}(N=N)
+    neurons = LIF{FT,UIT}(N=N)
+    synapses = DExpSynapse{FT,UIT}(N=N)
 
     # simulation
     @time for i = 1:nt
-        update!(neurons, neurons.param, dt, Ie[i, :])
+        update!(neurons, neurons.param, dt, @view Ie[i, :])
         varr[i, :] = neurons.v_
         spikearr[i, :] = neurons.spike
 
         # synapse
         update!(synapses, synapses.param, dt, neurons.spike)
+        #update_threads!(synapses, synapses.param, dt, neurons.spike)
         Isynarr[i, :] = synapses.Isyn
     end
 
@@ -52,4 +53,7 @@ function run_DExpSynapse_test()
     # プロットを縦に2つ並べる
     p = plot(p1, p2, p3, layout=(3, 1), size=(1000, 800))
 end
+
+#@time 
+#@code_warntype
 run_DExpSynapse_test()

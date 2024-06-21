@@ -10,15 +10,15 @@ Double exponential synapseを定義するファイル
 end
 
 # DoubleExpSynapseの定義
-@kwdef mutable struct DExpSynapse{FT} <: AbstractSynapse{FT}
+@kwdef mutable struct DExpSynapse{FT,UIT} <: AbstractSynapse{FT}
     param::DExpSynapseParameter = DExpSynapseParameter{FT}()
-    N::UInt32 #シナプスの数
+    N::UIT #シナプスの数
     Isyn::Vector{FT} = zeros(N) # シナプス動態
     h::Vector{FT} = zeros(N) # シナプス動態の補助変数
 end
-
+#=
 # DoubleExpSynapseに対するupdate!メソッドの定義
-function update!(synapses::DExpSynapse, param::DExpSynapseParameter, dt, spikes::Vector)
+function update!(synapses::DExpSynapse{FT,UIT}, param::DExpSynapseParameter{FT}, dt::FT, spikes::Vector{FT}) where {FT,UIT}
     @unpack N, Isyn, h = synapses
     @unpack τ_syn_fast, τ_syn_slow, ε0 = param
     
@@ -27,16 +27,28 @@ function update!(synapses::DExpSynapse, param::DExpSynapseParameter, dt, spikes:
         h[i] += dt * (-h[i]/τ_syn_fast + (ε0/dt)*spikes[i]/(τ_syn_fast*τ_syn_slow))
     end
 end
-
+=#
 # DoubleExpSynapseに対するupdate!メソッドの定義 spikesがBitVector型
-function update!(synapses::DExpSynapse, param::DExpSynapseParameter, dt, spikes::BitVector)
+function update!(synapses::DExpSynapse{FT,UIT}, param::DExpSynapseParameter{FT}, dt::FT,  spikes::BitVector) where {FT,UIT}
     @unpack N, Isyn, h = synapses
     @unpack τ_syn_fast, τ_syn_slow, ε0= param
     
     @inbounds for i = 1:N
         Isyn[i] += dt * (-Isyn[i]/τ_syn_slow + h[i])
         h[i] += dt * (-h[i]/τ_syn_fast + (ε0/dt)*spikes[i]/(τ_syn_fast*τ_syn_slow))
-        # spike による入力電流はdtを変えても変化しない
+        # spike による入力電流はdtを変えても変化しないにdtで割っている
+    end
+end
+
+# DoubleExpSynapseに対するupdate!メソッドの定義 spikesがBitVector型
+function update_threads!(synapses::DExpSynapse{FT,UIT}, param::DExpSynapseParameter{FT}, dt::FT,  spikes::BitVector) where {FT,UIT}
+    @unpack N, Isyn, h = synapses
+    @unpack τ_syn_fast, τ_syn_slow, ε0= param
+    
+    @inbounds Threads.@threads for i = 1:N
+        Isyn[i] += dt * (-Isyn[i]/τ_syn_slow + h[i])
+        h[i] += dt * (-h[i]/τ_syn_fast + (ε0/dt)*spikes[i]/(τ_syn_fast*τ_syn_slow))
+        # spike による入力電流はdtを変えても変化しないにdtで割っている
     end
 end
 
