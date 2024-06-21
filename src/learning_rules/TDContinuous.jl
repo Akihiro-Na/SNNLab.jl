@@ -24,12 +24,25 @@ end
 end
 
 # TDContinuousに対するupdate!メソッドの定義
-function update!(td::TDContinuous, param::TDContinuousParameter, dt, spikes::BitVector, reward)
+function update!(td::TDContinuous{FT,UIT}, param::TDContinuousParameter{FT}, dt::FT, spikes::BitVector, reward::FT) where {FT,UIT}
     @unpack N, trace_vector, h = td
     @unpack τ_fast, τ_slow, τ_reward, r0, V0 = param
-    kτ_1 = (τ_slow - τ_fast)/(τ_slow*τ_fast)
-    kτ_2 = kτ_1 * (τ_fast + τ_reward)/(τ_fast*τ_reward)
+    kτ_1::FT = (τ_slow - τ_fast)/(τ_slow*τ_fast)
+    kτ_2::FT = kτ_1 * (τ_fast + τ_reward)/(τ_fast*τ_reward)
     @inbounds for i = 1:N
+        trace_vector[i] += dt * (-trace_vector[i]/τ_slow + h[i] + spikes[i]*kτ_1/dt)
+        h[i] += dt * (-h[i]/τ_fast - spikes[i]*kτ_2/dt)
+    end
+    td.td_error = (r0/N) * sum(trace_vector) - V0/τ_reward + reward
+end
+
+# TDContinuousに対するupdate!メソッドの定義
+function update_threads!(td::TDContinuous{FT,UIT}, param::TDContinuousParameter{FT}, dt::FT, spikes::BitVector, reward::FT) where {FT,UIT}
+    @unpack N, trace_vector, h = td
+    @unpack τ_fast, τ_slow, τ_reward, r0, V0 = param
+    kτ_1::FT = (τ_slow - τ_fast)/(τ_slow*τ_fast)
+    kτ_2::FT = kτ_1 * (τ_fast + τ_reward)/(τ_fast*τ_reward)
+    @inbounds Threads.@threads for i = 1:N
         trace_vector[i] += dt * (-trace_vector[i]/τ_slow + h[i] + spikes[i]*kτ_1/dt)
         h[i] += dt * (-h[i]/τ_fast - spikes[i]*kτ_2/dt)
     end
