@@ -22,10 +22,11 @@ end
 
 # The case of 2D state 
 function update!(s2a::Spike2action{FT,UIT}, param::Spike2actionParameter{FT,UIT}, Isyn::Vector{FT})::Vector{FT} where {FT,UIT}
-    if sum(Isyn) ≠ 0
-        s2a.action = (param.actionset * Isyn)/sum(Isyn)
+    total_Isyn::FT = sum(Isyn)
+    if total_Isyn ≠ 0
+        s2a.action .= (param.actionset * Isyn) ./ total_Isyn
     else
-        s2a.action = [0,0]
+        s2a.action .= FT(0)
     end
     return s2a.action
 end
