@@ -13,29 +13,31 @@ LIFニューロンの定義ファイル
 end
 
 # LIFニューロンの定義
-@kwdef mutable struct LIF{FT} <: AbstractNeuron{FT}
-    param::LIFParameter = LIFParameter{FT}()
-    N::UInt32 #ニューロンの数
+@kwdef mutable struct LIF{FT,UIT} <: AbstractNeuron{FT}
+    param::LIFParameter{FT} = LIFParameter{FT}()
+    N::UIT #ニューロンの数
     v::Vector{FT} = fill(-65.0, N); v_::Vector{FT} = fill(-65.0, N) # 膜電位, 発火電位も記録する膜電位 (mV)
     spike::BitVector = BitVector(zeros(Bool, N))
     tlast::Vector{FT} = zeros(N) # 最後の発火時刻 [ms]
-    tcount::FT = 0 # 時間カウント
+    tcount::UIT = 0 # 時間カウント
 end
 
 # LIFNeuronに対するupdate!メソッドの定義
-function update!(neurons::LIF{FT}, param::LIFParameter{FT}, dt::FT, Ie::Vector{FT}) where FT
+function update!(neurons::LIF{FT,UIT}, param::LIFParameter{FT}, dt::FT, Ie::SubArray) where {FT,UIT}
     @unpack N, v, v_, spike, tlast, tcount = neurons
     @unpack tref, tau_m, vrest, vreset, vthr, vpeak = param
     
     @inbounds for i = 1:N
-        v[i] += dt * ((dt*tcount) > (tlast[i] + tref))*((vrest - v[i] + Ie[i]) / tau_m)
-    end
-    
-    @inbounds for i = 1:N
-        spike[i] = v[i] >= vthr
-        v_[i] = ifelse(spike[i], vpeak, v[i]) #発火時の電位も含めて記録するための変数
-        v[i] = ifelse(spike[i], vreset, v[i])        
-        tlast[i] = ifelse(spike[i], dt*tcount, tlast[i]) # 発火時刻の更新
+        vtmp = v[i]
+        tlasttmp = tlast[i]
+        
+        vtmp += dt * ((dt*tcount) > (tlasttmp + tref))*((vrest - vtmp + Ie[i]) / tau_m)
+        spiketmp = vtmp >= vthr
+
+        spike[i] = spiketmp
+        v_[i] = ifelse(spiketmp, vpeak, vtmp) #発火時の電位も含めて記録するための変数
+        v[i] = ifelse(spiketmp, vreset, vtmp)        
+        tlast[i] = ifelse(spiketmp, dt*tcount, tlasttmp) # 発火時刻の更新
     end
     # time count +1
     neurons.tcount += 1
@@ -47,6 +49,29 @@ end
     paramをLIFから参照すると実行時間は約0.02
     paramをmutableではない構造体として渡す方が10倍ほど早い
 =#
+
+# LIFNeuronに対するupdate!メソッドの定義
+function update_threads!(neurons::LIF{FT,UIT}, param::LIFParameter{FT}, dt::FT, Ie::SubArray) where {FT,UIT}
+    @unpack N, v, v_, spike, tlast, tcount = neurons
+    @unpack tref, tau_m, vrest, vreset, vthr, vpeak = param
+    
+    Threads.@threads for i = 1:N
+        @inbounds begin
+            vtmp = v[i]
+            tlasttmp = tlast[i]
+            
+            vtmp += dt * ((dt*tcount) > (tlasttmp + tref))*((vrest - vtmp + Ie[i]) / tau_m)
+            spiketmp = vtmp >= vthr
+    
+            spike[i] = spiketmp
+            v_[i] = ifelse(spiketmp, vpeak, vtmp) #発火時の電位も含めて記録するための変数
+            v[i] = ifelse(spiketmp, vreset, vtmp)        
+            tlast[i] = ifelse(spiketmp, dt*tcount, tlasttmp) # 発火時刻の更新
+        end
+    end
+    # time count +1
+    neurons.tcount += 1
+end
 
 # LIFNeuronに対するinit!メソッドの定義
 function init!(neurons::LIF)
