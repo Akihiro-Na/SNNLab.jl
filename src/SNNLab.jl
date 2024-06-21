@@ -66,7 +66,7 @@ export TDLTPAgent
 export Maze
 
 # Multiple dispatch function
-export update!,init!
+export update!,init!,update_threads!
 
 
 end # module
