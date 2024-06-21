@@ -27,12 +27,19 @@ end
 # Poisson point process neuron modelのupdate!メソッドの定義
 function update!(neurons::PPPNeuron{FT}, dt::FT, λ::Vector{FT}) where FT
     @unpack random_numbers, tcount, spike = neurons
-    #λ_dt = λ * dt * 1e-3 # 前もって計算しておく
+
+    # 乱数の配列が使い切られた場合、init! 関数を使用して新しい乱数を生成する
+    if tcount > size(random_numbers, 1)
+        init!(neurons)
+        @unpack random_numbers, tcount, spike = neurons
+    end
+    # スパイクが生じるかの判定
     @inbounds for i in eachindex(spike)
         spike[i] = random_numbers[tcount, i] < λ[i] * dt * 1e-3
     end
     # time count +1
     neurons.tcount += 1
+
     return neurons.spike
 end
 
