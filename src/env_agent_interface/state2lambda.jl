@@ -23,11 +23,6 @@ end
 end
 
 function vector_norm_grid!(norm_grid::Vector{FT}, grid::Vector{Tuple{FT,FT}}, x, y)::Vector{FT} where FT
-    #=
-    for (i, (a, b)) in enumerate(grid)
-        norm_grid[i] = norm([a - x, b - y])
-    end
-    =#
     @inbounds for i in eachindex(grid)
         a, b = grid[i]
         norm_grid[i] = sqrt((a - x)^2 + (b - y)^2)
