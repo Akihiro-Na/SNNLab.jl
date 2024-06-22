@@ -16,16 +16,16 @@ end
 =#
 
 # Poisson point process neuron modelの定義
-@kwdef mutable struct PPPNeuron{FT} <: AbstractNeuron{FT}
-    N::UInt32 #ニューロンの数
-    nt::UInt32 #用意する時間ステップ数
-    tcount::UInt = 1 # 時間カウント
+@kwdef mutable struct PPPNeuron{FT,UIT} <: AbstractNeuron{FT}
+    N::UIT #ニューロンの数
+    nt::UIT #用意する時間ステップ数
+    tcount::UIT = 1 # 時間カウント
     random_numbers::Matrix{FT} = rand(nt, N)
     spike::BitVector = BitVector(zeros(Bool, N))
 end
 
 # Poisson point process neuron modelのupdate!メソッドの定義
-function update!(neurons::PPPNeuron{FT}, dt::FT, λ::Vector{FT}) where FT
+function update!(neurons::PPPNeuron{FT,UIT}, dt::FT, λ) where {FT,UIT}
     @unpack random_numbers, tcount, spike = neurons
 
     # 乱数の配列が使い切られた場合、init! 関数を使用して新しい乱数を生成する
@@ -33,6 +33,7 @@ function update!(neurons::PPPNeuron{FT}, dt::FT, λ::Vector{FT}) where FT
         init!(neurons)
         @unpack random_numbers, tcount, spike = neurons
     end
+    
     # スパイクが生じるかの判定
     @inbounds for i in eachindex(spike)
         spike[i] = random_numbers[tcount, i] < λ[i] * dt * 1e-3
@@ -47,8 +48,8 @@ end
 function init!(neurons::PPPNeuron{FT}) where FT
     @unpack N, nt = neurons
     neurons.tcount = 1 # 時間カウント
-    neurons.random_numbers = rand(nt, N)
-    neurons.spike = BitVector(zeros(Bool, N))
+    rand!(neurons.random_numbers)
+    fill!(neurons.spike, false)
 end
 
 function get_spike(neurons::PPPNeuron)::BitVector

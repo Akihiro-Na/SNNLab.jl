@@ -24,7 +24,7 @@ using Plots
 
 function run_PPPNeuron_test()
     FT = Float64
-
+    UIT = UInt32
     T = 1*10^3 # ms
     dt::FT = 1 # ms
     nt = UInt32(T / dt) # number of timesteps
@@ -44,14 +44,14 @@ function run_PPPNeuron_test()
     Isynarr = zeros(FT, nt, N)
 
     # modelの定義
-    neurons = PPPNeuron{FT}(N=N, nt=nt_rand)
-    synapses = DExpSynapse{FT}(N=N)
+    neurons = PPPNeuron{FT,UIT}(N=N, nt=nt_rand)
+    synapses = DExpSynapse{FT,UIT}(N=N)
 
 
     # simulation
     init!(neurons)
     @time for i = 1:nt
-        update!(neurons, dt, λarr[:, i])#neurons.random_numbers[i,:] .< λarr[:,i]*dt*1e-3
+        update!(neurons, dt, @view λarr[:, i])#neurons.random_numbers[i,:] .< λarr[:,i]*dt*1e-3
         spikearr[i, :] = neurons.spike
 
         # synapse
