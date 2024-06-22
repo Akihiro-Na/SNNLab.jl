@@ -8,6 +8,7 @@ using ProgressBars # for progress bar
 
 # using at define of neurons -----
 using Base: @kwdef
+using Base: @view
 using Parameters: @unpack # or using UnPack
 # --------------------------------
 
