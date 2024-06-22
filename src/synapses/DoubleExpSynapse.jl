@@ -16,20 +16,9 @@ end
     Isyn::Vector{FT} = zeros(N) # シナプス動態
     h::Vector{FT} = zeros(N) # シナプス動態の補助変数
 end
-#=
-# DoubleExpSynapseに対するupdate!メソッドの定義
-function update!(synapses::DExpSynapse{FT,UIT}, param::DExpSynapseParameter{FT}, dt::FT, spikes::Vector{FT}) where {FT,UIT}
-    @unpack N, Isyn, h = synapses
-    @unpack τ_syn_fast, τ_syn_slow, ε0 = param
-    
-    @inbounds for i = 1:N
-        Isyn[i] += dt * (-Isyn[i]/τ_syn_slow + h[i])
-        h[i] += dt * (-h[i]/τ_syn_fast + (ε0/dt)*spikes[i]/(τ_syn_fast*τ_syn_slow))
-    end
-end
-=#
-# DoubleExpSynapseに対するupdate!メソッドの定義 spikesがBitVector型
-function update!(synapses::DExpSynapse{FT,UIT}, param::DExpSynapseParameter{FT}, dt::FT,  spikes::BitVector) where {FT,UIT}
+
+# DoubleExpSynapseに対するupdate!メソッドの定義 spikesがSubArray型
+function update!(synapses::DExpSynapse{FT,UIT}, param::DExpSynapseParameter{FT}, dt::FT,  spikes) where {FT,UIT}
     @unpack N, Isyn, h = synapses
     @unpack τ_syn_fast, τ_syn_slow, ε0= param
     
@@ -41,7 +30,7 @@ function update!(synapses::DExpSynapse{FT,UIT}, param::DExpSynapseParameter{FT},
 end
 
 # DoubleExpSynapseに対するupdate!メソッドの定義 spikesがBitVector型
-function update_threads!(synapses::DExpSynapse{FT,UIT}, param::DExpSynapseParameter{FT}, dt::FT,  spikes::BitVector) where {FT,UIT}
+function update_threads!(synapses::DExpSynapse{FT,UIT}, param::DExpSynapseParameter{FT}, dt::FT,  spikes) where {FT,UIT}
     @unpack N, Isyn, h = synapses
     @unpack τ_syn_fast, τ_syn_slow, ε0= param
     
