@@ -1,5 +1,11 @@
 #=
 TDLTP用エージェントの定義ファイル
+@time update!(agents.lambda, agents.lambda.param, state)
+    @time update!(agents.network, agents.lambda.λvec, dt, reward)
+    @time update!(agents.s2a,agents.s2a.param,agents.network.actor_synapses.Isyn)
+ 0.000009 seconds
+   0.000328 seconds (25 allocations: 544 bytes)
+  0.000010 seconds (2 allocations: 144 bytes)  
 =#
 
 # TDLTPAgentニューロンのパラメータ(固定)
@@ -31,6 +37,7 @@ end
 function update!(agents::TDLTPAgent{FT,UIT}, dt::FT, state::Vector{FT}, reward::FT) where {FT,UIT}
     update!(agents.lambda, agents.lambda.param, state)
     update!(agents.network, agents.lambda.λvec, dt, reward)
+    #update_threads!(agents.network, agents.lambda.λvec, dt, reward)
     update!(agents.s2a,agents.s2a.param,agents.network.actor_synapses.Isyn)
 end
 

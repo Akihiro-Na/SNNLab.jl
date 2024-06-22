@@ -38,7 +38,8 @@ function update!(ltp_trace::LTPTrace{FT}, param::LTPTraceParameter{FT}, dt::FT, 
             h[i,j] += dt * (-h[i,j]/τ_fast + Isyn[j]*critic_spikes[i]/(τ_slow*τ_fast*dt))
         end
     end
-    ltp_trace.∂V_∂wij = (η*r0 / (Npost*Δu)) * trace_matrix
+    mul!(ltp_trace.∂V_∂wij, (η*r0 / (Npost*Δu)), trace_matrix)
+    #ltp_trace.∂V_∂wij = (η*r0 / (Npost*Δu)) * trace_matrix
 end
 
 
