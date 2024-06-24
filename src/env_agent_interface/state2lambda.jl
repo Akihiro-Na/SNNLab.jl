@@ -2,9 +2,9 @@
 # state2λ のパラメータ(固定)
 @kwdef struct State2λParameter{FT,UIT} <: AbstractEnvAgentInrerfaceParam{FT,UIT}
     λmax::FT = 400 # 最大の発火頻度 [Hz]
-    σ::FT = 4 # place cell の配置間隔 [m]
-    xinterval::FT = 2
-    yinterval::FT = 2
+    σ::FT = 2 # 受容野の幅（標準偏差） [m]
+    xinterval::FT = 2 # place cell の配置間隔 [m]
+    yinterval::FT = 2 # place cell の配置間隔 [m]
     xmin::FT = -2
     xmax::FT = 22
     ymin::FT = -2
