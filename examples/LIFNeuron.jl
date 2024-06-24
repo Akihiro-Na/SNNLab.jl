@@ -1,31 +1,31 @@
 #=
 LIFニューロンのtest
 入力電流に対する応答の確認
-LIF単体でテスト 40000ニューロン T=450 ms, dt=1 ms　6スレッド 
-　0.184762 seconds (14.85 k allocations: 70.498 MiB)
-  0.177827 seconds (14.85 k allocations: 70.498 MiB, 6.11% gc time)
-  0.175320 seconds (14.85 k allocations: 70.498 MiB)
-  0.218928 seconds (14.85 k allocations: 70.498 MiB, 27.26% gc time)
-  0.163952 seconds (14.85 k allocations: 70.498 MiB)
-updateのアロケーションをなくした後
-  0.093238 seconds (13.95 k allocations: 1.895 MiB)
-  0.089075 seconds (13.95 k allocations: 1.895 MiB)
-  0.089431 seconds (13.95 k allocations: 1.895 MiB)
-  0.088505 seconds (13.95 k allocations: 1.895 MiB)
-  0.091089 seconds (13.95 k allocations: 1.895 MiB)
-並列計算なし　40000ニューロン
-  0.204907 seconds (900 allocations: 68.685 MiB)
-  0.201790 seconds (900 allocations: 68.685 MiB)
-  0.210969 seconds (900 allocations: 68.685 MiB, 5.90% gc time)
-  0.204427 seconds (900 allocations: 68.685 MiB)
-  0.300499 seconds (900 allocations: 68.685 MiB, 26.06% gc time)
-updateのアロケーションをなくした後
-  0.210940 seconds
-  0.198682 seconds
-  0.198883 seconds
-  0.198432 seconds
-  0.208331 seconds
-  0.209712 seconds
+LIF単体でテスト　@time
+update_threads! function (並列計算あり)4000ニューロン T=450 ms, dt=1 ms　6スレッド 
+  0.006103 seconds (13.95 k allocations: 1.895 MiB)
+  0.006208 seconds (13.95 k allocations: 1.895 MiB)
+  0.007183 seconds (13.95 k allocations: 1.895 MiB)
+  0.007475 seconds (13.95 k allocations: 1.895 MiB)
+  0.006522 seconds (13.95 k allocations: 1.895 MiB)
+  0.006004 seconds (13.95 k allocations: 1.895 MiB)
+update! function (並列計算なし)4000ニューロン T=450 ms, dt=1 ms　6スレッド 
+  0.010111 seconds
+  0.010299 seconds
+  0.010152 seconds
+  0.010558 seconds
+  0.010624 seconds
+  0.010168 seconds
+update_threads! function (並列計算あり)60ニューロン T=450 ms, dt=1 ms　6スレッド 
+  0.002484 seconds (13.95 k allocations: 1.895 MiB)
+  0.002617 seconds (13.95 k allocations: 1.895 MiB)
+  0.002238 seconds (13.95 k allocations: 1.895 MiB)
+  0.002270 seconds (13.95 k allocations: 1.895 MiB)
+update! function (並列計算なし)60ニューロン T=450 ms, dt=1 ms　6スレッド 
+  0.000079 seconds
+  0.000074 seconds
+  0.000076 seconds
+  0.000077 seconds
 =#
 using SNNLab
 using Plots
@@ -36,7 +36,7 @@ function run_LIFNeuron_test()
     T::FT = 450 # ms
     dt::FT = 1 # ms
     nt = UIT(T / dt) # number of timesteps
-    N::UIT = 40 # ニューロンの数
+    N::UIT = 60 # ニューロンの数
 
     # 入力刺激
     t = Array{FT}(1:nt) * dt
