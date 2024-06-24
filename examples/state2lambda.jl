@@ -34,7 +34,7 @@ mutable struct SaveArr{FT,UIT}
     idx::UIT
 
     function SaveArr{FT,UIT}(dt::FT, nt::UIT, Ninput::UIT, env) where {FT, UIT}
-        sampling_step = div(10, dt)
+        sampling_step = div(100, dt)
         saveindmax = UIT(div(nt, sampling_step) + 1)
         statearr = zeros(FT, saveindmax, length(env.state))
         spikearr = BitArray(undef, nt, Ninput)
@@ -45,17 +45,17 @@ mutable struct SaveArr{FT,UIT}
 end
 
 function run_state2lambda_test()
-    FT = Float64
+    FT = Float32
     UIT = UInt32
 
-    T = 1000 # ms
-    dt::FT = 0.01 # ms
+    T = 60*10^3 # ms
+    dt::FT = 1 # ms
     nt::UIT = div(T, dt) # number of timesteps
     t = Array{FT}(1:nt) * dt
 
 
     # Mazemodelの定義 ========
-    env = Maze{FT}(start=[1, 1])
+    env = Maze{FT}(start=[2, 2])
 
     #init!(env, (1,1),0)
     # =========================
@@ -66,8 +66,8 @@ function run_state2lambda_test()
     # ===============================
 
     # PoissonNeuronの定義 ===========
-    neurons = PPPNeuron{FT}(N=Ninput, nt=nt)
-    synapses = DExpSynapse{FT}(N=Ninput)
+    neurons = PPPNeuron{FT,UIT}(N=Ninput, nt=nt)
+    synapses = DExpSynapse{FT,UIT}(N=Ninput)
 
     # 記録用配列の確保 ==============
     
@@ -102,7 +102,7 @@ function run_state2lambda_test()
 
     #アニメーションのインスタンス生成
 
-    function plot_receptive_centers!(receptive_centers::Vector{Tuple{Float64,Float64}}, Isynarr::Matrix{Float64}, timestep::Int)
+    function plot_receptive_centers!(receptive_centers::Vector{Tuple{FT,FT}}, Isynarr::Matrix{FT}, timestep::UIT) where {FT,UIT}
         x_coords = [center[1] for center in receptive_centers]
         y_coords = [center[2] for center in receptive_centers]
 
