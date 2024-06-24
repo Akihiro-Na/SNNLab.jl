@@ -3,18 +3,6 @@ LIFニューロンのtest
 入力電流に対する応答の確認
     T = 450 # ms
     dt::FT = 1 # ms
-update!関数 N=60 
-  0.000178 seconds
-  0.000179 seconds
-  0.000179 seconds
-  0.000178 seconds
-  0.000191 seconds
-update_threads!関数 N=60
-  0.001940 seconds (13.95 k allocations: 1.730 MiB)
-  0.002048 seconds (13.95 k allocations: 1.730 MiB)
-  0.002030 seconds (13.95 k allocations: 1.730 MiB)
-  0.002057 seconds (13.95 k allocations: 1.730 MiB)
-  0.002820 seconds (13.95 k allocations: 1.731 MiB)
 update!関数 N=4000
   0.026772 seconds
   0.025039 seconds
@@ -27,6 +15,19 @@ update_threads!関数 N=4000
   0.030467 seconds (13.95 k allocations: 1.730 MiB)
   0.029742 seconds (13.95 k allocations: 1.730 MiB)
   0.029824 seconds (13.95 k allocations: 1.730 MiB)
+update!関数 N=60 
+  0.000178 seconds
+  0.000179 seconds
+  0.000179 seconds
+  0.000178 seconds
+  0.000191 seconds
+update_threads!関数 N=60
+  0.001940 seconds (13.95 k allocations: 1.730 MiB)
+  0.002048 seconds (13.95 k allocations: 1.730 MiB)
+  0.002030 seconds (13.95 k allocations: 1.730 MiB)
+  0.002057 seconds (13.95 k allocations: 1.730 MiB)
+  0.002820 seconds (13.95 k allocations: 1.731 MiB)
+
 =#
 using SNNLab
 using Plots
@@ -62,8 +63,8 @@ function run_DExpSynapse_test()
         spikearr[i, :] = neurons.spike
 
         # synapse
-        #update!(synapses, synapses.param, dt, neurons.spike)
-        update_threads!(synapses, synapses.param, dt, neurons.spike)
+        update!(synapses, synapses.param, dt, neurons.spike)
+        #update_threads!(synapses, synapses.param, dt, neurons.spike)
         Isynarr[i, :] = synapses.Isyn
     end
 

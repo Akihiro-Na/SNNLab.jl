@@ -18,26 +18,28 @@ end
 end
 
 # DoubleExpSynapseに対するupdate!メソッドの定義 spikesがSubArray型
-function update!(synapses::DExpSynapse{FT,UIT}, param::DExpSynapseParameter{FT}, dt::FT,  spikes) where {FT,UIT}
+function update!(synapses::DExpSynapse{FT,UIT}, param::DExpSynapseParameter{FT}, dt::FT, spikes) where {FT,UIT}
     @unpack N, Isyn, h = synapses
-    @unpack τ_syn_fast, τ_syn_slow, ε0= param
-    
+    @unpack τ_syn_fast, τ_syn_slow, ε0 = param
+
     @inbounds for i = 1:N
-        Isyn[i] += dt * (-Isyn[i]/τ_syn_slow + h[i])
-        h[i] += dt * (-h[i]/τ_syn_fast + (ε0/dt)*spikes[i]/(τ_syn_fast*τ_syn_slow))
+        Isyn[i] += dt * (-Isyn[i] / τ_syn_slow + h[i])
+        h[i] += dt * (-h[i] / τ_syn_fast + (ε0 / dt) * spikes[i] / (τ_syn_fast * τ_syn_slow))
         # spike による入力電流はdtを変えても変化しないにdtで割っている
     end
 end
 
 # DoubleExpSynapseに対するupdate!メソッドの定義 spikesがBitVector型
-function update_threads!(synapses::DExpSynapse{FT,UIT}, param::DExpSynapseParameter{FT}, dt::FT,  spikes) where {FT,UIT}
+function update_threads!(synapses::DExpSynapse{FT,UIT}, param::DExpSynapseParameter{FT}, dt::FT, spikes) where {FT,UIT}
     @unpack N, Isyn, h = synapses
-    @unpack τ_syn_fast, τ_syn_slow, ε0= param
-    
-    @inbounds Threads.@threads for i = 1:N
-        Isyn[i] += dt * (-Isyn[i]/τ_syn_slow + h[i])
-        h[i] += dt * (-h[i]/τ_syn_fast + (ε0/dt)*spikes[i]/(τ_syn_fast*τ_syn_slow))
-        # spike による入力電流はdtを変えても変化しないにdtで割っている
+    @unpack τ_syn_fast, τ_syn_slow, ε0 = param
+
+    Threads.@threads for i = 1:N
+        @inbounds begin
+            Isyn[i] += dt * (-Isyn[i] / τ_syn_slow + h[i])
+            h[i] += dt * (-h[i] / τ_syn_fast + (ε0 / dt) * spikes[i] / (τ_syn_fast * τ_syn_slow))
+            # spike による入力電流はdtを変えても変化しないにdtで割っている
+        end
     end
 end
 
@@ -48,6 +50,6 @@ function init!(synapses::DExpSynapse)
     h = zeros(N)
 end
 
-function get_Isyn(synapse::DExpSynapse{FT})::Vector{FT} where FT
+function get_Isyn(synapse::DExpSynapse{FT})::Vector{FT} where {FT}
     return synapse.Isyn
 end
