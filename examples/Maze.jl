@@ -15,14 +15,14 @@ function run_Maze_test()
 
     FT = Float32
 
-    T = 10 * 10^3 # ms
+    T = 60 * 10^3 # ms
     dt::FT = 1 # ms
     nt = UInt32(T / dt) # number of timesteps
     t = Array{FT}(1:nt) * dt
 
 
     # modelの定義
-    env = Maze{FT}(start=[2, 2])
+    env = Maze{FT}(start=[8, 8])
     #init!(env, (1,1),0)
 
     # 記録用
