@@ -23,8 +23,8 @@ end
 
 # 環境のupdate!関数 actionは[-1,1]
 function update!(maze::Maze{FT}, param::MazeParam{FT}, action::FT, dt::FT) where FT
-    dx::FT = param.velocity * cospi(action) * dt *10
-    dy::FT = param.velocity * sinpi(action) * dt *10
+    dx::FT = param.velocity * cospi(action) * dt
+    dy::FT = param.velocity * sinpi(action) * dt
     maze.next_state[1] = maze.state[1] + dx
     maze.next_state[2] = maze.state[2] + dy
     
