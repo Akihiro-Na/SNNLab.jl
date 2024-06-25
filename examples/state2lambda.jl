@@ -25,6 +25,9 @@ using Plots
 using ProgressBars
 using Parameters: @unpack # or using UnPack
 
+let 
+    
+
 mutable struct SaveArr{FT,UIT}
     sampling_step::UIT
     saveindmax::UIT
@@ -55,7 +58,8 @@ function run_state2lambda_test()
 
 
     # Mazemodelの定義 ========
-    env = Maze{FT}(start=[2, 2])
+    param_env = SNNLab.MazeParam{FT}(velocity=10*10^-3)
+    env = Maze{FT}(start=[2, 2], param=param_env)
 
     #init!(env, (1,1),0)
     # =========================
@@ -145,3 +149,5 @@ function run_state2lambda_test()
 
 end
 run_state2lambda_test()
+
+end
