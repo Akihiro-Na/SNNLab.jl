@@ -99,7 +99,7 @@ function run_nicolas2013_test()
     FT = Float32
     UIT = UInt32
 
-    T::FT = 600 * 10^3 # ms
+    T::FT = 60 * 10^3 # ms
     dt::FT = 1 # ms
     sampling_interval::UIT = 1000# ms for save data interval
     nt::UIT = div(T, dt) # number of timesteps
