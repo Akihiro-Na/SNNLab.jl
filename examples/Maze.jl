@@ -6,13 +6,6 @@ using Plots
 
 function run_Maze_test()
 
-    function plot_circle!(x, y, r; color=:red)
-        θ = range(0, 2π, 100)
-        xc = x .+ r .* cos.(θ)
-        yc = y .+ r .* sin.(θ)
-        plot!(xc, yc, seriestype=:shape, lw=2, color=color)
-    end
-
     FT = Float32
 
     T = 60 * 10^3 # ms
@@ -22,7 +15,8 @@ function run_Maze_test()
 
 
     # modelの定義
-    env = Maze{FT}(start=[8, 8])
+    param_env = SNNLab.MazeParam{FT}(velocity=50*10^-3)
+    env = Maze{FT}(start=[5, 5], param=param_env)
     #init!(env, (1,1),0)
 
     # 記録用
@@ -45,7 +39,7 @@ function run_Maze_test()
         if mod(i, 100) == 0
             plot([statearr[i, 1]], [statearr[i, 2]], size=(250, 250), st=:scatter,
                 xlims=xylim, ylims=xylim)
-            plt = plot_circle!(param.goal[1], param.goal[2], param.goal_radius; color=:red)
+            plt = SNNLab.plot_circle!(param.goal[1], param.goal[2], param.goal_radius; color=:red)
             frame(anim, plt)
         end
     end

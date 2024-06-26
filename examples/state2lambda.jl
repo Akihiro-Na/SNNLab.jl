@@ -58,8 +58,8 @@ function run_state2lambda_test()
 
 
     # Mazemodelの定義 ========
-    param_env = SNNLab.MazeParam{FT}(velocity=10*10^-3)
-    env = Maze{FT}(start=[2, 2], param=param_env)
+    param_env = SNNLab.MazeParam{FT}(velocity=50*10^-3)
+    env = Maze{FT}(start=[5, 5], param=param_env)
 
     #init!(env, (1,1),0)
     # =========================
@@ -105,32 +105,6 @@ function run_state2lambda_test()
     end
 
     #アニメーションのインスタンス生成
-
-    function plot_receptive_centers!(receptive_centers::Vector{Tuple{FT,FT}}, Isynarr::Matrix{FT}, timestep::UIT) where {FT,UIT}
-        x_coords = [center[1] for center in receptive_centers]
-        y_coords = [center[2] for center in receptive_centers]
-
-        # 指定したタイムステップの Isyn 値を取得
-        Isyn_values = Isynarr[timestep, :]
-
-        # 点の大きさと色を設定
-        sizes = abs.(Isyn_values) .* 1  # サイズのスケーリング（適宜調整）
-        colors = Isyn_values  # 色のスケーリング
-
-        scatter!(x_coords, y_coords, size=(600, 600), st=:scatter,
-            marker_z=colors, markersize=sizes, c=:viridis, legend=false,
-            xlabel="X", ylabel="Y",
-            clims=(0, 10),
-            title="Receptive Centers at timestep $timestep")
-    end
-
-    function plot_circle!(x, y, r; color=:red)
-        θ = range(0, 2π, 100)
-        xc = x .+ r .* cos.(θ)
-        yc = y .+ r .* sin.(θ)
-        plot!(xc, yc, seriestype=:shape, lw=2, color=color)
-    end
-    
     anim = Animation()
     xylim = (-2, 22)
     df::UIT = 1
@@ -141,8 +115,8 @@ function run_state2lambda_test()
         #plot animatin
         plot([x], [y], size=(250, 250), st=:scatter,
             xlims=xylim, ylims=xylim)
-        plt = plot_circle!(goal[1], goal[2], goal_radius; color=:red)
-        plot_receptive_centers!(lambda.param.receptive_centers, savearr.Isynarr, i)
+        plt = SNNLab.plot_circle!(goal[1], goal[2], goal_radius; color=:red)
+        SNNLab.plot_receptive_centers!(lambda.param.receptive_centers, savearr.Isynarr, i)
         frame(anim, plt)
     end
     gif(anim, "maze.gif", fps=50)
