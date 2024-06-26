@@ -27,9 +27,9 @@ function run_PPPNeuron_test()
     UIT = UInt32
     T = 1*10^3 # ms
     dt::FT = 1 # ms
-    nt = UInt32(T / dt) # number of timesteps
-    nt_rand = UInt32(nt / 10)
-    N = UInt32(20) # ニューロンの数
+    nt = UIT(T / dt) # number of timesteps
+    nt_rand = UIT(nt / 10)
+    N = UIT(20) # ニューロンの数
 
     t = Array{FT}(1:nt) * dt
 
