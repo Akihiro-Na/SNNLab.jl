@@ -47,7 +47,9 @@ include("environments/AbEnvironment.jl")
 include("environments/Maze.jl")
 # end of synapse model ==========
 
-
+# utils function =================
+include("utils/plot_utils.jl")
+# end of utils function ==========
 
 
 
