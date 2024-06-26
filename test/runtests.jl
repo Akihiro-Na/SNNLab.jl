@@ -1,11 +1,9 @@
 using SNNLab
 using Test
 
-@testset "SNNLab.jl" begin
-    # Write your tests here.
-    
-end
-
+############################################
+## Tests for Neuron Model ##################
+############################################
 @testset "LIFNeuron Tests" begin
     # LIFNeuronファイル内の関数や構造体のテスト
     include("../examples/LIFNeuron.jl")
@@ -16,15 +14,35 @@ end
     include("../examples/PoissonNeuron.jl")
 end
 
+############################################
+## Tests for Synapse Model #################
+############################################
+@testset "DoubleExpSynapse Tests with LIF" begin
+    include("../examples/DoubleExpSynapse.jl")
+end
+
+############################################
+## Tests for Environment Model #############
+############################################
 @testset "Maze Env Tests" begin
     # Mazeファイル内の関数や構造体のテスト
     include("../examples/Maze.jl")
 end
 
-@testset "DoubleExpSynapse Tests with LIF" begin
-    include("../examples/DoubleExpSynapse.jl")
+############################################
+## Tests for env_agent_interface  ##########
+############################################
+@testset "state2λ Tests" begin
+    include("../examples/state2lambda.jl")
 end
 
-@testset "state2λ" begin
-    include("../examples/state2lambda.jl")
+@testset "spike2action Tests" begin
+    
+end
+
+############################################
+## Tests Learning through interaction ######
+############################################
+@testset "Continuous Maze learning with TD LTP Tests" begin
+    include("../examples/Nicolas_etal_2013.jl")
 end

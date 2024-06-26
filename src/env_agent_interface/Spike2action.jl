@@ -1,5 +1,6 @@
 #=
-    Spike2actionの定義ファイル
+Spike2actionの定義ファイル
+ニューロン集団のスパイク活動から２次元のアクションベクトルを生成
 =#
 # Spike2action のパラメータ(固定)
 struct Spike2actionParameter{FT,UIT} <: AbstractEnvAgentInrerfaceParam{FT,UIT}

@@ -19,10 +19,28 @@ function plot_receptive_centers!(receptive_centers::Vector{Tuple{FT,FT}}, Isynar
     Isyn_values = Isynarr[timestep, :]
 
     # 点の大きさと色を設定
-    sizes = abs.(Isyn_values) .* 1  # サイズのスケーリング（適宜調整）
+    sizes = abs.(Isyn_values) .* 1 .+ 0.1  # サイズのスケーリング（適宜調整）
     colors = Isyn_values  # 色のスケーリング
 
-    scatter!(x_coords, y_coords, size=(600, 600), st=:scatter,
+    scatter!(x_coords, y_coords, st=:scatter,
+        marker_z=colors, markersize=sizes, c=:viridis, legend=false,
+        xlabel="X", ylabel="Y",
+        clims=(0, 10),
+        title="Receptive Centers at timestep $timestep")
+end
+
+function plot_receptive_centers(receptive_centers::Vector{Tuple{FT,FT}}, Isynarr::Matrix{FT}, timestep::UIT) where {FT,UIT}
+    x_coords = [center[1] for center in receptive_centers]
+    y_coords = [center[2] for center in receptive_centers]
+
+    # 指定したタイムステップの Isyn 値を取得
+    Isyn_values = Isynarr[timestep, :]
+
+    # 点の大きさと色を設定
+    sizes = abs.(Isyn_values) .* 1 .+ 0.1  # サイズのスケーリング（適宜調整）
+    colors = Isyn_values  # 色のスケーリング
+
+    scatter(x_coords, y_coords, st=:scatter,
         marker_z=colors, markersize=sizes, c=:viridis, legend=false,
         xlabel="X", ylabel="Y",
         clims=(0, 10),
