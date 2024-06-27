@@ -1,6 +1,9 @@
 #=
 Spike2actionの定義ファイル
 ニューロン集団のスパイク活動から２次元のアクションベクトルを生成
+
+懸念点
+・total_Isynで規格化していることにより神経活動が全体的に弱い場合でも同じ大きさのアクションが出てくる
 =#
 # Spike2action のパラメータ(固定)
 struct Spike2actionParameter{FT,UIT} <: AbstractEnvAgentInrerfaceParam{FT,UIT}
