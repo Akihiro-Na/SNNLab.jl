@@ -37,7 +37,7 @@ end
 end
 
 @testset "spike2action Tests" begin
-    
+    include("../examples/spike2action.jl")
 end
 
 ############################################
