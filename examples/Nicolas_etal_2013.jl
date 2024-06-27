@@ -13,26 +13,10 @@ using Plots
 using ProgressBars
 using Parameters: @unpack # or using UnPack
 using Printf
-using Interpolations # for Interp2D
-using LinearAlgebra
+using LinearAlgebra # for lmul! and mul!
 
-function Interp2D(data, factor)
+let 
 
-    IC = CubicSplineInterpolation((axes(data, 1), axes(data, 2)), data)
-
-    finerx = LinRange(firstindex(data, 1), lastindex(data, 1), size(data, 1) * factor)
-    finery = LinRange(firstindex(data, 2), lastindex(data, 2), size(data, 2) * factor)
-    nx = length(finerx)
-    ny = length(finery)
-
-    data_interp = Array{Float64}(undef, nx, ny)
-    for i ∈ 1:nx, j ∈ 1:ny
-        data_interp[i, j] = IC(finerx[i], finery[j])
-    end
-
-    return finery, finerx, data_interp
-
-end
 
 @kwdef mutable struct SaveArr{FT,UIT}
     Nactor::UIT
@@ -55,51 +39,11 @@ end
     # spikearr = BitArray(undef, nt, Ninput)
 end
 
-function plot_receptive_centers!(receptive_centers::Vector{Tuple{FT,FT}}, Isynarr::Matrix{FT}, timestep, td_error) where {FT}
-    x_coords = [center[1] for center in receptive_centers]
-    y_coords = [center[2] for center in receptive_centers]
-
-    # 指定したタイムステップの Isyn 値を取得
-    Isyn_values = Isynarr[timestep, :]
-
-    # 点の大きさと色を設定
-    sizes = abs.(Isyn_values) .* 1  # サイズのスケーリング（適宜調整）
-    colors = Isyn_values  # 色のスケーリング
-
-    scatter!(x_coords, y_coords, size=(600, 600), st=:scatter,
-        marker_z=colors, markersize=sizes, c=:viridis, legend=false,
-        xlabel="X", ylabel="Y",
-        clims=(0, 10.0),
-        title="timestep $timestep, td error = $td_error")
-end
-
-function plot_circle!(x, y, r; color=:red)
-    θ = range(0, 2π, 100)
-    xc = x .+ r .* cos.(θ)
-    yc = y .+ r .* sin.(θ)
-    plot!(xc, yc, seriestype=:shape, lw=2, color=color)
-end
-
-# ベクトル場のplot ===================================================
-# as: arrow head size 0-1 (fraction of arrow length;  la: arrow alpha transparency 0-1
-# arrow0!は次のURLを参考https://discourse.julialang.org/t/plots-jl-arrows-style-in-quiver/13659/5
-function arrow0!(x, y, u, v; as=0.1, lw=1, lc=:black, la=1)
-    nuv = sqrt(u^2 + v^2)
-    v1, v2 = [u; v] / nuv, [-v; u] / nuv
-    v4 = (3 * v1 + v2) / 3.1623  # sqrt(10) to get unit vector
-    v5 = v4 - 2 * (v4' * v2) * v2
-    v4, v5 = as * nuv * v4, as * nuv * v5
-    plot!([x, x + u], [y, y + v], lw=lw, lc=lc, la=la, label=false)
-    plot!([x + u, x + u - v5[1]], [y + v, y + v - v5[2]], lw=lw, lc=lc, la=la, label=false)
-    plot!([x + u, x + u - v4[1]], [y + v, y + v - v4[2]], lw=lw, lc=lc, la=la, label=false)
-end
-
-
 function run_nicolas2013_test()
     FT = Float32
     UIT = UInt32
 
-    T::FT = 60 * 10^3 # ms
+    T::FT = 10 * 10^3 # ms
     dt::FT = 1 # ms
     sampling_interval::UIT = 1000# ms for save data interval
     nt::UIT = div(T, dt) # number of timesteps
@@ -172,18 +116,17 @@ function run_nicolas2013_test()
         x = savearr.statearr[i, 1]
         y = savearr.statearr[i, 2]
 
-        _, _, c_value = Interp2D(reshape(savearr.wi2c_mean[i, :], (length_receptive_y, length_receptive_x))', sizefactor)
+        _, _, c_value = SNNLab.Interp2D(reshape(savearr.wi2c_mean[i, :], (length_receptive_y, length_receptive_x))', sizefactor)
 
         #plot animatin
         plt = heatmap(x_heat, y_heat, c_value, clims=clim)
-        plot_circle!(goal[1], goal[2], goal_radius; color=:red)
-        # plot_receptive_centers!(agent.lambda.param.receptive_centers, savearr.inputIsynarr, i, savearr.tdarr[i])
+        SNNLab.plot_circle!(goal[1], goal[2], goal_radius; color=:red)
         X = [i for i in agent.lambda.param.receptive_x, j in 1:length_receptive_y]
         Y = [j for i in 1:length_receptive_x, j in agent.lambda.param.receptive_y]
         dx = reshape(savearr.wi2a_mean[i, 1, :], (length_receptive_y, length_receptive_x)) * 10
         dy = reshape(savearr.wi2a_mean[i, 2, :], (length_receptive_y, length_receptive_x)) * 10
         # プロット
-        arrow0!.(X, Y, dx, dy; as=0.4, lw=3, lc=:red, la=1) # 要検証 ##############
+        SNNLab.arrow0!.(X, Y, dx, dy; as=0.4, lw=3, lc=:red, la=1) # 要検証 ##############
         title_str = @sprintf("Timestep %d, td error = %.7f", i, savearr.tdarr[i])
         plot!([x], [y], st=:scatter,
             xlims=xylim, ylims=xylim,
@@ -197,3 +140,5 @@ function run_nicolas2013_test()
 end
 
 run_nicolas2013_test()
+
+end
