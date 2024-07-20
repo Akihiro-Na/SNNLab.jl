@@ -24,6 +24,7 @@ using SNNLab
 using Plots
 using ProgressBars
 using Parameters: @unpack # or using UnPack
+using Printf # for sprintf
 
 let 
     
@@ -116,7 +117,7 @@ function run_state2lambda_test()
         plot([x], [y], size=(250, 250), st=:scatter,
             xlims=xylim, ylims=xylim)
         plt = SNNLab.plot_circle!(goal[1], goal[2], goal_radius; color=:red)
-        title_str = @sprintf("Timestep %d, i")
+        title_str = @sprintf("Timestep %d", i)
         SNNLab.plot_receptive_centers!(lambda.param.receptive_centers, savearr.Isynarr, i,title_str)
         frame(anim, plt)
     end

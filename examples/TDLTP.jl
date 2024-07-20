@@ -29,7 +29,7 @@ mutable struct SaveArr{FT,UIT}
     end
 end
 
-#function run_state2lambda_test()
+function run_state2lambda_test()
     FT = Float64
     UIT = UInt32
 
@@ -176,5 +176,5 @@ end
     end
     gif(anim, "maze.gif", fps=50)
 
-#end
-#run_state2lambda_test()
+end
+run_state2lambda_test()
