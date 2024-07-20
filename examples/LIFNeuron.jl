@@ -46,6 +46,9 @@ function run_LIFNeuron_test()
     varr = zeros(FT, nt, N)
 
     # modelの定義
+    lifparameter = SNNLab.LIFParameter{FT}(
+      tau_m = 10
+    )
     neurons = LIF{FT,UIT}(N=N)
 
     # simulation
@@ -61,7 +64,7 @@ function run_LIFNeuron_test()
     ylabel!(p1, "Membrane potential [mV]")
     p2 = plot(t, Ie[:, i], color="black", legend=false)
     ylabel!(p2, "Input current [mA]")
-    xlabel!(p2, "Time [s]")
+    xlabel!(p2, "Time [ms]")
     # プロットを縦に2つ並べる
     p = plot(p1, p2, layout=(2, 1), size=(800, 600))
     display(p)
