@@ -25,4 +25,5 @@ Manifest.toml
 
 # add by Nakamura
 *.gif
+*.png
 .vscode/
