@@ -21,7 +21,7 @@ end
     reward::FT = 0
 end
 
-# 環境のupdate!関数 actionは[-1,1]
+# 環境のupdate!関数 actionは角度
 function update!(maze::Maze{FT}, param::MazeParam{FT}, action::FT, dt::FT) where FT
     dx::FT = param.velocity * cospi(action) * dt
     dy::FT = param.velocity * sinpi(action) * dt
@@ -42,7 +42,7 @@ function update!(maze::Maze{FT}, param::MazeParam{FT}, action::FT, dt::FT) where
     
 end
 
-# 環境のupdate!関数 actionは[-1,1]
+# 環境のupdate!関数 actionはベクトル入力
 function update!(maze::Maze{FT}, param::MazeParam{FT}, action::Vector{FT}, dt::FT) where FT
     dx::FT = param.velocity * action[1] * dt
     dy::FT = param.velocity * action[2] * dt
