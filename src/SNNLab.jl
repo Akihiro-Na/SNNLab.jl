@@ -45,6 +45,7 @@ include("agents/AgentTDLTP.jl")
 # environment models =================
 include("environments/AbEnvironment.jl")
 include("environments/Maze.jl")
+include("environments/InvertedPendulum.jl")
 # end of synapse model ==========
 
 # utils function =================
@@ -67,9 +68,11 @@ export State2λ,Spike2action
 export TDLTPAgent
 # Environment model
 export Maze
+export InvertedPendulum
 
 # Multiple dispatch function
 export update!,init!,update_threads!
+export save_log!
 
 
 end # module
